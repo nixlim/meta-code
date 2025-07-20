@@ -3,15 +3,23 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/meta-mcp/meta-mcp-server/internal/logging"
 	"github.com/meta-mcp/meta-mcp-server/internal/protocol/mcp"
 )
 
 func main() {
+	// Initialize logger based on environment
+	logConfig := logging.ConfigFromEnv()
+	logger := logging.New(logConfig)
+	logging.SetDefault(logger)
+	
+	// Create context with component information
+	ctx := logging.WithComponent(context.Background(), "main")
+	
 	// Configure the handshake-enabled server
 	config := mcp.HandshakeConfig{
 		Name:              "Meta-MCP Server",
@@ -24,7 +32,7 @@ func main() {
 			mcp.WithRecovery(),
 		},
 	}
-	
+
 	// Create a new handshake-enabled MCP server
 	server := mcp.NewHandshakeServer(config)
 
@@ -114,8 +122,14 @@ func main() {
 	})
 
 	// Start the server using stdio transport with handshake support
-	log.Println("Starting Meta-MCP Server with handshake support...")
+	logger.Info(ctx, "Starting Meta-MCP Server with handshake support...")
+	logger.WithFields(logging.LogFields{
+		"server_name": config.Name,
+		"version": config.Version,
+		"handshake_timeout": config.HandshakeTimeout,
+	}).Info(ctx, "Server configuration loaded")
+	
 	if err := mcp.ServeStdioWithHandshake(server); err != nil {
-		log.Fatalf("Server error: %v", err)
+		logger.Fatal(ctx, err, "Server error")
 	}
 }

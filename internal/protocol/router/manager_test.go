@@ -113,12 +113,12 @@ func TestRequestManager(t *testing.T) {
 		if rejected == 0 {
 			t.Error("Expected some requests to be rejected")
 		}
-		
+
 		metrics := rm.GetMetrics()
 		if metrics.RejectedRequests == 0 {
 			t.Error("Expected RejectedRequests metric to be > 0")
 		}
-		
+
 		// Wait for queue to clear before next test
 		for i := 0; i < 50; i++ {
 			m := rm.GetMetrics()
@@ -283,10 +283,10 @@ func TestRequestManagerQueueing(t *testing.T) {
 
 	// Wait for blockers to start
 	wg.Wait()
-	
+
 	// Give a small delay to ensure blockers are holding semaphores
 	time.Sleep(10 * time.Millisecond)
-	
+
 	// Check metrics before queueing
 	metrics := rm.GetMetrics()
 	t.Logf("Before queueing - Active: %d, Queued: %d", metrics.ActiveRequests, metrics.QueuedRequests)
@@ -305,7 +305,7 @@ func TestRequestManagerQueueing(t *testing.T) {
 			break
 		}
 	}
-	
+
 	// Check metrics after queueing
 	metrics = rm.GetMetrics()
 	t.Logf("After queueing - Active: %d, Queued: %d", metrics.ActiveRequests, metrics.QueuedRequests)

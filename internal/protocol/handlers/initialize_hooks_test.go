@@ -138,6 +138,8 @@ func TestIsVersionSupported(t *testing.T) {
 	}
 }
 
+// Commented out - SelectProtocolVersion function was removed in favor of isVersionSupported
+/*
 func TestSelectProtocolVersion(t *testing.T) {
 	supportedVersions := []string{"2.0", "1.0", "0.1.0"}
 
@@ -166,3 +168,4 @@ func TestSelectProtocolVersion_EmptySupported(t *testing.T) {
 		t.Errorf("SelectProtocolVersion with empty supported = %v, want 1.0", got)
 	}
 }
+*/

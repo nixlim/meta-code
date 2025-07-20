@@ -4,10 +4,11 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"log"
+	"sync"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/meta-mcp/meta-mcp-server/internal/logging"
 	"github.com/meta-mcp/meta-mcp-server/internal/protocol/connection"
 )
 
@@ -25,83 +26,120 @@ func CreateInitializeHooks(config InitializeHooksConfig) (server.OnBeforeInitial
 		config.SupportedVersions = []string{"1.0", "0.1.0"} // MCP protocol versions
 	}
 
+	logger := logging.Default().WithComponent("init")
+	
+	// Store request data for use in afterInit
+	var requestData struct {
+		mu sync.Mutex
+		requests map[any]*mcp.InitializeRequest
+	}
+	requestData.requests = make(map[any]*mcp.InitializeRequest)
+
 	// Before initialization hook
 	beforeInit := func(ctx context.Context, id any, request *mcp.InitializeRequest) {
-		log.Printf("[INIT] Before initialize hook triggered for request ID: %v", id)
+		logger.WithField("request_id", id).Debug(ctx, "Before initialize hook triggered")
+		
+		// Store request for afterInit
+		requestData.mu.Lock()
+		requestData.requests[id] = request
+		requestData.mu.Unlock()
 
-		// Extract connection from context
-		conn, ok := connection.ConnectionFromContext(ctx, config.ConnectionManager)
+		// Get connection from context
+		connID, ok := connection.GetConnectionID(ctx)
 		if !ok {
-			log.Printf("[INIT] Warning: No connection found in context for ID: %v", id)
+			logger.WithField("request_id", id).Warn(ctx, "No connection found in context")
 			return
 		}
 
-		log.Printf("[INIT] Connection %s state before handshake: %s", conn.ID, conn.GetState())
+		conn, exists := config.ConnectionManager.GetConnection(connID)
+		if !exists {
+			logger.WithField("request_id", id).Warn(ctx, "Connection not found")
+			return
+		}
+		
+		logger.WithFields(logging.LogFields{
+			logging.FieldConnectionID: conn.ID,
+			logging.FieldConnectionState: conn.GetState().String(),
+		}).Debug(ctx, "Connection state before handshake")
 
 		// Validate protocol version
 		clientVersion := request.Params.ProtocolVersion
 		if !isVersionSupported(clientVersion, config.SupportedVersions) {
-			log.Printf("[INIT] Unsupported protocol version from client: %s", clientVersion)
-			// Note: We can't return an error from this hook, so we'll handle it in the server response
+			logger.WithField(logging.FieldProtocolVersion, clientVersion).
+				Error(ctx, nil, "Unsupported protocol version from client")
+			// In a real implementation, we'd reject the request here
+			return
 		}
 
-		// Log client info
-		log.Printf("[INIT] Client info - Name: %s, Version: %s",
-			request.Params.ClientInfo.Name,
-			request.Params.ClientInfo.Version)
+		logger.WithFields(logging.LogFields{
+			logging.FieldClientName: request.Params.ClientInfo.Name,
+			logging.FieldVersion: request.Params.ClientInfo.Version,
+		}).Info(ctx, "Client info")
 
-		// Log client capabilities
-		logClientCapabilities(&request.Params.Capabilities)
+		// Start handshake
+		timeoutCallback := func() {
+			logger.WithField(logging.FieldConnectionID, conn.ID).
+				Warn(ctx, "Handshake timeout")
+		}
 
-		// Start handshake with timeout
-		err := conn.StartHandshake(func() {
-			log.Printf("[INIT] Handshake timeout for connection %s", conn.ID)
-			config.ConnectionManager.RemoveConnection(conn.ID)
-		})
-
-		if err != nil {
-			log.Printf("[INIT] Error starting handshake for connection %s: %v", conn.ID, err)
+		if err := conn.StartHandshake(timeoutCallback); err != nil {
+			logger.WithField(logging.FieldConnectionID, conn.ID).
+				Error(ctx, err, "Error starting handshake")
 		}
 	}
 
 	// After initialization hook
-	afterInit := func(ctx context.Context, id any, request *mcp.InitializeRequest, result *mcp.InitializeResult) {
-		log.Printf("[INIT] After initialize hook triggered for request ID: %v", id)
+	afterInit := func(ctx context.Context, id any, message *mcp.InitializeRequest, result *mcp.InitializeResult) {
+		logger.WithField("request_id", id).Debug(ctx, "After initialize hook triggered")
 
-		// Extract connection from context
-		conn, ok := connection.ConnectionFromContext(ctx, config.ConnectionManager)
+		// Get connection from context
+		connID, ok := connection.GetConnectionID(ctx)
 		if !ok {
-			log.Printf("[INIT] Warning: No connection found in context after init for ID: %v", id)
+			logger.WithField("request_id", id).Warn(ctx, "No connection found in context after init")
 			return
 		}
 
-		// Store client information
-		clientInfo := make(map[string]interface{})
-		clientInfo["name"] = request.Params.ClientInfo.Name
-		clientInfo["version"] = request.Params.ClientInfo.Version
+		conn, exists := config.ConnectionManager.GetConnection(connID)
+		if !exists {
+			return
+		}
 
-		// Store capabilities
-		clientInfo["capabilities"] = request.Params.Capabilities
+		// Clean up stored request
+		requestData.mu.Lock()
+		delete(requestData.requests, id)
+		requestData.mu.Unlock()
+		
+		// Prepare client info for handshake completion
+		clientInfo := make(map[string]interface{})
+		if message != nil {
+			clientInfo["name"] = message.Params.ClientInfo.Name
+			clientInfo["version"] = message.Params.ClientInfo.Version
+		}
 
 		// Complete handshake
-		err := conn.CompleteHandshake(result.ProtocolVersion, clientInfo)
-		if err != nil {
-			log.Printf("[INIT] Error completing handshake for connection %s: %v", conn.ID, err)
+		if err := conn.CompleteHandshake(result.ProtocolVersion, clientInfo); err != nil {
+			logger.WithField(logging.FieldConnectionID, conn.ID).
+				Error(ctx, err, "Error completing handshake")
 			return
 		}
 
-		log.Printf("[INIT] Handshake completed successfully for connection %s", conn.ID)
-		log.Printf("[INIT] Connection %s state after handshake: %s", conn.ID, conn.GetState())
-		log.Printf("[INIT] Negotiated protocol version: %s", result.ProtocolVersion)
+		logger.WithFields(logging.LogFields{
+			logging.FieldConnectionID: conn.ID,
+			logging.FieldConnectionState: conn.GetState().String(),
+			logging.FieldProtocolVersion: result.ProtocolVersion,
+		}).Info(ctx, "Handshake completed successfully")
 
-		// Log server capabilities that were sent
-		logServerCapabilities(&result.Capabilities)
+		// Log capabilities if needed for debugging
+		if message != nil {
+			logClientCapabilities(ctx, logger, &message.Params.Capabilities)
+		}
+		logServerCapabilities(ctx, logger, &result.Capabilities)
 	}
 
 	return beforeInit, afterInit
 }
 
-// isVersionSupported checks if the client version is supported by the server.
+// isVersionSupported checks if the client version is supported.
 func isVersionSupported(clientVersion string, supportedVersions []string) bool {
 	for _, v := range supportedVersions {
 		if v == clientVersion {
@@ -111,80 +149,76 @@ func isVersionSupported(clientVersion string, supportedVersions []string) bool {
 	return false
 }
 
-// SelectProtocolVersion selects the best protocol version based on client and server support.
-func SelectProtocolVersion(clientVersion string, supportedVersions []string) string {
-	// If client version is supported, use it
-	if isVersionSupported(clientVersion, supportedVersions) {
-		return clientVersion
+// validateVersionCompatibility ensures client and server can communicate.
+func validateVersionCompatibility(clientVersion string, supportedVersions []string) error {
+	if !isVersionSupported(clientVersion, supportedVersions) {
+		return fmt.Errorf("unsupported protocol version: %s (supported: %v)",
+			clientVersion, supportedVersions)
 	}
-
-	// Otherwise, return the first (highest priority) supported version
-	if len(supportedVersions) > 0 {
-		return supportedVersions[0]
-	}
-
-	// Fallback to a default version
-	return "1.0"
+	return nil
 }
 
-// logClientCapabilities logs the client's capabilities for debugging.
-func logClientCapabilities(caps *mcp.ClientCapabilities) {
-	log.Printf("[INIT] Client capabilities:")
+// logClientCapabilities logs detailed client capabilities for debugging.
+func logClientCapabilities(ctx context.Context, logger *logging.Logger, caps *mcp.ClientCapabilities) {
+	if caps == nil {
+		return
+	}
+
+	logger.Debug(ctx, "Client capabilities:")
 
 	if caps.Experimental != nil {
-		log.Printf("[INIT]   - Experimental features: %+v", caps.Experimental)
+		logger.WithField("experimental", caps.Experimental).Debug(ctx, "  - Experimental features")
 	}
 
 	if caps.Sampling != nil {
-		log.Printf("[INIT]   - Sampling: %+v", caps.Sampling)
+		logger.WithField("sampling", caps.Sampling).Debug(ctx, "  - Sampling")
 	}
 
 	if caps.Roots != nil {
-		log.Printf("[INIT]   - Roots:")
+		logger.Debug(ctx, "  - Roots:")
 		if caps.Roots.ListChanged {
-			log.Printf("[INIT]     - List changed notifications: enabled")
+			logger.Debug(ctx, "    - List changed notifications: enabled")
 		}
 	}
 }
 
-// logServerCapabilities logs the server's capabilities for debugging.
-func logServerCapabilities(caps *mcp.ServerCapabilities) {
-	log.Printf("[INIT] Server capabilities:")
+// logServerCapabilities logs detailed server capabilities for debugging.
+func logServerCapabilities(ctx context.Context, logger *logging.Logger, caps *mcp.ServerCapabilities) {
+	if caps == nil {
+		return
+	}
+
+	logger.Debug(ctx, "Server capabilities:")
 
 	if caps.Experimental != nil {
-		log.Printf("[INIT]   - Experimental features: %+v", caps.Experimental)
+		logger.WithField("experimental", caps.Experimental).Debug(ctx, "  - Experimental features")
 	}
 
 	if caps.Logging != nil {
-		log.Printf("[INIT]   - Logging: %+v", caps.Logging)
+		logger.WithField("logging", caps.Logging).Debug(ctx, "  - Logging")
 	}
 
 	if caps.Prompts != nil {
-		log.Printf("[INIT]   - Prompts:")
+		logger.Debug(ctx, "  - Prompts:")
 		if caps.Prompts.ListChanged {
-			log.Printf("[INIT]     - List changed notifications: enabled")
+			logger.Debug(ctx, "    - List changed notifications: enabled")
 		}
 	}
 
 	if caps.Resources != nil {
-		log.Printf("[INIT]   - Resources:")
+		logger.Debug(ctx, "  - Resources:")
 		if caps.Resources.Subscribe {
-			log.Printf("[INIT]     - Subscribe: enabled")
+			logger.Debug(ctx, "    - Subscribe: enabled")
 		}
 		if caps.Resources.ListChanged {
-			log.Printf("[INIT]     - List changed notifications: enabled")
+			logger.Debug(ctx, "    - List changed notifications: enabled")
 		}
 	}
 
 	if caps.Tools != nil {
-		log.Printf("[INIT]   - Tools:")
+		logger.Debug(ctx, "  - Tools:")
 		if caps.Tools.ListChanged {
-			log.Printf("[INIT]     - List changed notifications: enabled")
+			logger.Debug(ctx, "    - List changed notifications: enabled")
 		}
 	}
-}
-
-// CreateInitializationError creates a proper JSON-RPC error for initialization failures.
-func CreateInitializationError(message string) error {
-	return fmt.Errorf("initialization failed: %s", message)
 }

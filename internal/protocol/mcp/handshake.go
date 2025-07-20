@@ -3,11 +3,11 @@ package mcp
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/meta-mcp/meta-mcp-server/internal/logging"
 	"github.com/meta-mcp/meta-mcp-server/internal/protocol/connection"
 	"github.com/meta-mcp/meta-mcp-server/internal/protocol/handlers"
 )
@@ -66,7 +66,8 @@ func NewHandshakeServer(config HandshakeConfig) *HandshakeServer {
 func (hs *HandshakeServer) createHooks() *server.Hooks {
 	hooks := &server.Hooks{}
 
-	log.Println("[HANDSHAKE] Creating handshake hooks...")
+	logger := logging.Default().WithComponent("handshake")
+	logger.Debug(context.Background(), "Creating handshake hooks...")
 
 	// Create initialization hooks
 	beforeInit, afterInit := handlers.CreateInitializeHooks(handlers.InitializeHooksConfig{
@@ -99,7 +100,7 @@ func (hs *HandshakeServer) createHooks() *server.Hooks {
 	hooks.AddOnError(errorHook)
 	hooks.AddOnSuccess(successHook)
 
-	log.Printf("[HANDSHAKE] Hooks registered successfully")
+	logger.Debug(context.Background(), "Hooks registered successfully")
 
 	return hooks
 }
@@ -107,7 +108,8 @@ func (hs *HandshakeServer) createHooks() *server.Hooks {
 // registerHooks sets up all the necessary hooks for handshake management.
 func (hs *HandshakeServer) registerHooks() {
 	// This method is no longer needed as we pass hooks during server creation
-	log.Println("[HANDSHAKE] Hooks configured during server creation")
+	logger := logging.Default().WithComponent("handshake")
+	logger.Debug(context.Background(), "Hooks configured during server creation")
 }
 
 // CreateConnection creates a new connection and returns a context with the connection ID.
@@ -118,7 +120,11 @@ func (hs *HandshakeServer) CreateConnection(ctx context.Context, connectionID st
 		return ctx, err
 	}
 
-	log.Printf("[HANDSHAKE] Created connection %s with timeout %v", connectionID, conn.HandshakeTimeout)
+	logger := logging.Default().WithComponent("handshake")
+	logger.WithFields(logging.LogFields{
+		logging.FieldConnectionID: connectionID,
+		"timeout": conn.HandshakeTimeout,
+	}).Debug(ctx, "Created connection")
 
 	// Add connection ID to context
 	ctx = connection.WithConnectionID(ctx, connectionID)
@@ -128,7 +134,8 @@ func (hs *HandshakeServer) CreateConnection(ctx context.Context, connectionID st
 
 // CloseConnection closes a connection and cleans up resources.
 func (hs *HandshakeServer) CloseConnection(connectionID string) {
-	log.Printf("[HANDSHAKE] Closing connection %s", connectionID)
+	logger := logging.Default().WithComponent("handshake")
+	logger.WithField(logging.FieldConnectionID, connectionID).Debug(context.Background(), "Closing connection")
 	hs.connectionManager.RemoveConnection(connectionID)
 }
 
@@ -136,7 +143,6 @@ func (hs *HandshakeServer) CloseConnection(connectionID string) {
 func (hs *HandshakeServer) GetConnectionManager() *connection.Manager {
 	return hs.connectionManager
 }
-
 
 // ServeStdioWithHandshake starts the server with stdio transport and handshake support.
 func ServeStdioWithHandshake(hs *HandshakeServer, opts ...server.StdioOption) error {
@@ -153,7 +159,8 @@ func ServeStdioWithHandshake(hs *HandshakeServer, opts ...server.StdioOption) er
 	// Ensure connection is cleaned up on exit
 	defer hs.CloseConnection(connectionID)
 
-	log.Printf("[HANDSHAKE] Starting stdio server with connection %s", connectionID)
+	logger := logging.Default().WithComponent("handshake")
+	logger.WithField(logging.FieldConnectionID, connectionID).Info(ctx, "Starting stdio server")
 
 	// Start the server
 	// Note: We need to pass the context with connection ID to the server
@@ -168,38 +175,46 @@ func (hs *HandshakeServer) HandleMessage(ctx context.Context, message json.RawMe
 	connID, ok := connection.GetConnectionID(ctx)
 	if !ok {
 		// No connection ID means no handshake validation
-		log.Printf("[HANDSHAKE] Warning: No connection ID in context, proceeding without validation")
+		logger := logging.Default().WithComponent("handshake")
+		logger.Warn(ctx, "No connection ID in context, proceeding without validation")
 		// Fall back to base server handling
 		return hs.Server.HandleMessage(ctx, message)
 	}
-	
+
 	// Get connection to check handshake state
 	conn, exists := hs.connectionManager.GetConnection(connID)
 	if !exists {
-		log.Printf("[HANDSHAKE] Error: Connection %s not found", connID)
+		logger := logging.Default().WithComponent("handshake")
+		logger.WithField(logging.FieldConnectionID, connID).Error(ctx, nil, "Connection not found")
 		// Return error response
 		return mcp.NewJSONRPCError(mcp.RequestId{}, -32002, "Connection not found", nil)
 	}
-	
+
 	// Parse the request to check method
 	var req struct {
 		Method string        `json:"method"`
 		ID     mcp.RequestId `json:"id,omitempty"`
 	}
 	if err := json.Unmarshal(message, &req); err != nil {
-		log.Printf("[HANDSHAKE] Error parsing request: %v", err)
+		logger := logging.Default().WithComponent("handshake")
+		logger.Error(ctx, err, "Error parsing request")
 		// Return parse error
 		return mcp.NewJSONRPCError(mcp.RequestId{}, mcp.PARSE_ERROR, "Parse error", nil)
 	}
-	
+
 	// Check if connection is ready for non-initialize requests
 	if req.Method != "initialize" && !conn.IsReady() {
-		log.Printf("[HANDSHAKE] Rejecting %s request from connection %s (not initialized)", req.Method, connID)
+		logger := logging.Default().WithComponent("handshake")
+		logger.WithFields(logging.LogFields{
+			logging.FieldMethod: req.Method,
+			logging.FieldConnectionID: connID,
+			logging.FieldConnectionState: "not_initialized",
+		}).Warn(ctx, "Rejecting request - connection not initialized")
 		// Return not initialized error with custom code
-		return mcp.NewJSONRPCError(req.ID, -32001, "Not initialized", 
+		return mcp.NewJSONRPCError(req.ID, -32001, "Not initialized",
 			"Initialize handshake must be completed before other requests")
 	}
-	
+
 	// Delegate to base server for actual handling
 	return hs.Server.HandleMessage(ctx, message)
 }

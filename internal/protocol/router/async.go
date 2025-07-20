@@ -199,7 +199,7 @@ func (ar *AsyncRouter) HandleAsync(ctx context.Context, request *jsonrpc.Request
 				}
 			}
 		}()
-		
+
 		select {
 		case response := <-responseChan:
 			ar.tracker.Complete(correlationID, response)
@@ -235,7 +235,7 @@ func (ar *AsyncRouter) HandleAsyncWithTimeout(ctx context.Context, request *json
 	} else if rc.Timeout == 0 {
 		rc.Timeout = timeout
 	}
-	
+
 	// Store cancel function in metadata so it can be called after request completes
 	rc.SetMetadata("_cancel", cancel)
 

@@ -249,7 +249,7 @@ func TestAsyncRouterIntegration(t *testing.T) {
 
 		// Log final counts
 		totalProcessed := int(successCount + errorCount)
-		t.Logf("Total processed: %d (success: %d, errors: %d)", 
+		t.Logf("Total processed: %d (success: %d, errors: %d)",
 			totalProcessed, successCount, errorCount)
 	})
 
@@ -331,7 +331,7 @@ func TestAsyncRouterStressTest(t *testing.T) {
 				Error: jsonrpc.NewError(jsonrpc.ErrorCodeInvalidParams, "invalid params type", nil),
 			}
 		}
-		
+
 		delayVal, ok := params["delay"]
 		if !ok {
 			return &jsonrpc.Response{
@@ -339,7 +339,7 @@ func TestAsyncRouterStressTest(t *testing.T) {
 				Error: jsonrpc.NewError(jsonrpc.ErrorCodeInvalidParams, "missing delay param", nil),
 			}
 		}
-		
+
 		delayFloat, ok := delayVal.(float64)
 		if !ok {
 			return &jsonrpc.Response{
@@ -347,7 +347,7 @@ func TestAsyncRouterStressTest(t *testing.T) {
 				Error: jsonrpc.NewError(jsonrpc.ErrorCodeInvalidParams, "delay must be number", nil),
 			}
 		}
-		
+
 		delay := time.Duration(delayFloat) * time.Millisecond
 		select {
 		case <-time.After(delay):
@@ -435,7 +435,7 @@ func TestAsyncRouterStressTest(t *testing.T) {
 				} else {
 					atomic.AddInt32(&errorCount, 1)
 					// Log the specific response error for debugging
-					t.Logf("Request %d got response error: Code=%d, Message=%s, Data=%v", 
+					t.Logf("Request %d got response error: Code=%d, Message=%s, Data=%v",
 						n, resp.Error.Code, resp.Error.Message, resp.Error.Data)
 				}
 			} else {
@@ -455,7 +455,7 @@ func TestAsyncRouterStressTest(t *testing.T) {
 	t.Logf("Stress test completed in %v", duration)
 	t.Logf("Requests: %d, Success: %d, Timeouts: %d, Errors: %d",
 		numRequests, successCount, timeoutCount, errorCount)
-	
+
 	// Debug: Check if we're getting any specific type of error
 	if errorCount > 0 && successCount == 0 {
 		t.Logf("All requests failed - possible systematic issue")

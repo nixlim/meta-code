@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"context"
-	"log"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/meta-mcp/meta-mcp-server/internal/logging"
 	"github.com/meta-mcp/meta-mcp-server/internal/protocol/connection"
 	"github.com/meta-mcp/meta-mcp-server/internal/protocol/jsonrpc"
 )
@@ -17,25 +17,30 @@ type ValidationHooksConfig struct {
 
 // CreateValidationHooks creates hooks for validating requests based on connection state.
 func CreateValidationHooks(config ValidationHooksConfig) server.BeforeAnyHookFunc {
+	logger := logging.Default().WithComponent("validation")
+	
 	return func(ctx context.Context, id any, method mcp.MCPMethod, message any) {
-		log.Printf("[VALIDATION] BeforeAny hook triggered - Method: %s, ID: %v", method, id)
+		logger.WithFields(logging.LogFields{
+			logging.FieldMethod: string(method),
+			"id": id,
+		}).Debug(ctx, "BeforeAny hook triggered")
 
 		// Always allow initialize method
 		if method == mcp.MethodInitialize {
-			log.Printf("[VALIDATION] Allowing initialize method")
+			logger.Debug(ctx, "Allowing initialize method")
 			return
 		}
 
 		// Always allow notifications (they don't require responses)
 		if isNotification(id) {
-			log.Printf("[VALIDATION] Allowing notification (no ID)")
+			logger.Debug(ctx, "Allowing notification (no ID)")
 			return
 		}
 
 		// Extract connection from context
 		conn, ok := connection.ConnectionFromContext(ctx, config.ConnectionManager)
 		if !ok {
-			log.Printf("[VALIDATION] Warning: No connection found in context for validation")
+			logger.Warn(ctx, "No connection found in context for validation")
 			// In a real implementation, we might want to reject the request here
 			// For now, we'll log and continue
 			return
@@ -44,8 +49,11 @@ func CreateValidationHooks(config ValidationHooksConfig) server.BeforeAnyHookFun
 		// Check if connection is ready
 		if !conn.IsReady() {
 			state := conn.GetState()
-			log.Printf("[VALIDATION] Rejecting method %s - connection %s not ready (state: %s)",
-				method, conn.ID, state)
+			logger.WithFields(logging.LogFields{
+				logging.FieldMethod: string(method),
+				logging.FieldConnectionID: conn.ID,
+				logging.FieldConnectionState: state.String(),
+			}).Warn(ctx, "Rejecting method - connection not ready")
 
 			// Note: The BeforeAny hook doesn't allow us to return an error directly.
 			// In a real implementation, we would need to either:
@@ -56,7 +64,10 @@ func CreateValidationHooks(config ValidationHooksConfig) server.BeforeAnyHookFun
 			// For now, we'll log the rejection. The actual error response would need
 			// to be handled by the request handler or through a custom middleware layer.
 		} else {
-			log.Printf("[VALIDATION] Allowing method %s - connection %s is ready", method, conn.ID)
+			logger.WithFields(logging.LogFields{
+				logging.FieldMethod: string(method),
+				logging.FieldConnectionID: conn.ID,
+			}).Debug(ctx, "Allowing method - connection ready")
 		}
 	}
 }
@@ -103,12 +114,18 @@ func isNotification(id any) bool {
 // CreateErrorHook creates an error hook that logs validation errors.
 func CreateErrorHook(config ValidationHooksConfig) server.OnErrorHookFunc {
 	return func(ctx context.Context, id any, method mcp.MCPMethod, message any, err error) {
-		log.Printf("[VALIDATION] Error in method %s (ID: %v): %v", method, id, err)
+		logger := logging.Default().WithComponent("validation")
+		logger.WithFields(logging.LogFields{
+			logging.FieldMethod: string(method),
+			"id": id,
+		}).Error(ctx, err, "Error in method")
 
 		// Log connection state for debugging
 		if conn, ok := connection.ConnectionFromContext(ctx, config.ConnectionManager); ok {
-			log.Printf("[VALIDATION] Connection %s state during error: %s",
-				conn.ID, conn.GetState())
+			logger.WithFields(logging.LogFields{
+				logging.FieldConnectionID: conn.ID,
+				logging.FieldConnectionState: conn.GetState().String(),
+			}).Debug(ctx, "Connection state during error")
 		}
 	}
 }
@@ -118,7 +135,11 @@ func CreateSuccessHook(config ValidationHooksConfig) server.OnSuccessHookFunc {
 	return func(ctx context.Context, id any, method mcp.MCPMethod, message any, result any) {
 		// Only log non-routine methods to reduce noise
 		if method != mcp.MethodPing {
-			log.Printf("[VALIDATION] Success for method %s (ID: %v)", method, id)
+			logger := logging.Default().WithComponent("validation")
+			logger.WithFields(logging.LogFields{
+				logging.FieldMethod: string(method),
+				"id": id,
+			}).Debug(ctx, "Success for method")
 		}
 	}
 }
