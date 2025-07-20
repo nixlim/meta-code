@@ -1,24 +1,16 @@
 When you receive
 
 __simone:initialize [argument]__ command, follow the instructions in @.claude/commands/simone/initialize.md
-
 __simone:commit [argument]__ command, follow the instructions in @.claude/commands/simone/commit.md
-
 __simone:code_review [argument]__ command, follow the instructions in @.claude/commands/simone/code_review.md
-
-__simone:mermaid [argument]__ command, follow the instructions in @.claude/commands/simone/mermaid.md
-
-__simone:create_general_task [argument]__ command, follow the instructions in @.claude/commands/simone/create_general_task.md
-
 __simone:do_task [argument]__ command, follow the instructions in @.claude/commands/simone/do_task.md
-
 __simone:testing_review [argument]__ command, follow the instructions in @.claude/commands/simone/testing_review.md
-
 __simone:test [argument]__ command, follow the instructions in @.claude/commands/simone/test.md
-
-__simone:yolo [argument]__ command, follow the instructions in @.claude/commands/simone/yolo.md
-
 __simone:project_review [argument]__ command, follow the instructions in @.claude/commands/simone/project_review.md
+
+IMPORTANT:
+When using third party libraries, use `go doc` to read the documentation and understand how to use the library correctly.
+Avoid writing custom implementations if the library provides the functionality you need.
 
 - # Go Best Practices
 
