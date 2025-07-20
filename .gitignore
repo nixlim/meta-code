@@ -63,3 +63,4 @@ build/
 coverage.txt
 coverage.html
 *.cov
+/server
