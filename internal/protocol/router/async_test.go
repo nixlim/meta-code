@@ -72,6 +72,10 @@ func TestAsyncRouter(t *testing.T) {
 			t.Fatalf("GetResponse failed: %v", err)
 		}
 
+		if resp == nil {
+			t.Fatal("GetResponse returned nil response")
+		}
+
 		if resp.ID != req.ID {
 			t.Errorf("Expected response ID %v, got %v", req.ID, resp.ID)
 		}
@@ -165,6 +169,11 @@ func TestAsyncRouter(t *testing.T) {
 				resp, err := ar.GetResponse(correlationID, 1*time.Second)
 				if err != nil {
 					t.Errorf("GetResponse %d failed: %v", n, err)
+					return
+				}
+
+				if resp == nil {
+					t.Errorf("GetResponse %d returned nil response", n)
 					return
 				}
 
@@ -373,6 +382,10 @@ func TestAsyncRouterWithMiddleware(t *testing.T) {
 	resp, err := ar.GetResponse(correlationID, 1*time.Second)
 	if err != nil {
 		t.Fatalf("GetResponse failed: %v", err)
+	}
+
+	if resp == nil {
+		t.Fatal("GetResponse returned nil response")
 	}
 
 	if !middlewareCalled {

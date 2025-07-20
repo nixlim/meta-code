@@ -184,20 +184,22 @@ func (ar *AsyncRouter) HandleAsync(ctx context.Context, request *jsonrpc.Request
 		responseChan:  responseChan,
 	}
 
-	// Try to queue request
-	select {
-	case ar.requestChan <- asyncReq:
-		// Request queued successfully
-	default:
-		close(responseChan)
-		return "", ErrQueueFull
-	}
-
-	// Register for correlation tracking
+	// Register for correlation tracking BEFORE queuing
 	ar.tracker.Register(correlationID)
 
-	// Start goroutine to wait for response and complete correlation
+	// Start goroutine to wait for response BEFORE queuing
 	go func() {
+		defer func() {
+			// If context has a cancel function in metadata, call it
+			if rc, ok := GetRequestContext(ctx); ok {
+				if cancelFn, ok := rc.GetMetadata("_cancel"); ok {
+					if cancel, ok := cancelFn.(context.CancelFunc); ok {
+						cancel()
+					}
+				}
+			}
+		}()
+		
 		select {
 		case response := <-responseChan:
 			ar.tracker.Complete(correlationID, response)
@@ -206,14 +208,23 @@ func (ar *AsyncRouter) HandleAsync(ctx context.Context, request *jsonrpc.Request
 		}
 	}()
 
-	return correlationID, nil
+	// Try to queue request AFTER setting up response handling
+	select {
+	case ar.requestChan <- asyncReq:
+		// Request queued successfully
+		return correlationID, nil
+	default:
+		// Queue full - clean up
+		ar.tracker.Cancel(correlationID)
+		close(responseChan)
+		return "", ErrQueueFull
+	}
 }
 
 // HandleAsyncWithTimeout handles a request asynchronously with a timeout
 func (ar *AsyncRouter) HandleAsyncWithTimeout(ctx context.Context, request *jsonrpc.Request, timeout time.Duration) (string, error) {
 	// Create timeout context
 	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	// Get or create request context
 	rc, ok := GetRequestContext(timeoutCtx)
@@ -224,6 +235,9 @@ func (ar *AsyncRouter) HandleAsyncWithTimeout(ctx context.Context, request *json
 	} else if rc.Timeout == 0 {
 		rc.Timeout = timeout
 	}
+	
+	// Store cancel function in metadata so it can be called after request completes
+	rc.SetMetadata("_cancel", cancel)
 
 	return ar.HandleAsync(timeoutCtx, request)
 }

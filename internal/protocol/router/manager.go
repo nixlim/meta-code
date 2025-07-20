@@ -117,10 +117,12 @@ func (rm *RequestManager) processQueue() {
 			case rm.semaphore <- struct{}{}:
 				// Update metrics
 				atomic.AddInt64(&rm.metrics.QueuedRequests, -1)
+				atomic.AddInt64(&rm.metrics.ActiveRequests, 1)
 
 				// Execute function
 				go func() {
 					defer func() {
+						atomic.AddInt64(&rm.metrics.ActiveRequests, -1)
 						<-rm.semaphore // Release semaphore
 					}()
 					fn()
@@ -156,12 +158,10 @@ func (rm *RequestManager) updateMetrics() {
 	rm.metrics.mu.Lock()
 	defer rm.metrics.mu.Unlock()
 
-	// Count active requests
-	activeCount := int64(0)
+	// Calculate max duration of active requests
 	var maxDuration time.Duration
 
 	rm.activeRequests.Range(func(_, value interface{}) bool {
-		activeCount++
 		req := value.(*ActiveRequest)
 		duration := time.Since(req.StartTime)
 		if duration > maxDuration {
@@ -169,8 +169,6 @@ func (rm *RequestManager) updateMetrics() {
 		}
 		return true
 	})
-
-	rm.metrics.ActiveRequests = activeCount
 	rm.metrics.MaxActiveDuration = maxDuration
 
 	// Update max queue depth
@@ -216,11 +214,11 @@ func (rm *RequestManager) Execute(ctx context.Context, requestID string, fn func
 
 	// Track active request
 	rm.activeRequests.Store(requestID, activeReq)
-	defer rm.activeRequests.Delete(requestID)
 
 	// Create execution function
 	execFn := func() {
 		defer func() {
+			rm.activeRequests.Delete(requestID)
 			atomic.AddInt64(&rm.metrics.CompletedRequests, 1)
 			cancel() // Ensure context is cancelled
 		}()
@@ -246,8 +244,12 @@ func (rm *RequestManager) Execute(ctx context.Context, requestID string, fn func
 	select {
 	case rm.semaphore <- struct{}{}:
 		// Got semaphore, execute directly
+		atomic.AddInt64(&rm.metrics.ActiveRequests, 1)
 		go func() {
-			defer func() { <-rm.semaphore }()
+			defer func() {
+				atomic.AddInt64(&rm.metrics.ActiveRequests, -1)
+				<-rm.semaphore
+			}()
 			execFn()
 		}()
 		return nil
@@ -347,7 +349,7 @@ func (rm *RequestManager) GetMetrics() ManagerMetrics {
 
 	return ManagerMetrics{
 		TotalRequests:     atomic.LoadInt64(&rm.metrics.TotalRequests),
-		ActiveRequests:    rm.metrics.ActiveRequests,
+		ActiveRequests:    atomic.LoadInt64(&rm.metrics.ActiveRequests),
 		QueuedRequests:    atomic.LoadInt64(&rm.metrics.QueuedRequests),
 		RejectedRequests:  atomic.LoadInt64(&rm.metrics.RejectedRequests),
 		CompletedRequests: atomic.LoadInt64(&rm.metrics.CompletedRequests),
