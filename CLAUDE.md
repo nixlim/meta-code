@@ -100,7 +100,7 @@ This project uses the Simone task management system with Claude Code slash comma
 ### Task Structure
 Tasks are located in `.simone/03_SPRINTS/S01_M01_Core_Protocol/` with format:
 - `T[ID]_S01_[Name].md` - Open tasks
-- `TX[ID]_S01_[Name].md` - Completed tasks
+- `T[ID]_S01_[Name].md` - Completed tasks
 
 ### Development Workflow
 1. Use `/simone:do_task` to get next task
