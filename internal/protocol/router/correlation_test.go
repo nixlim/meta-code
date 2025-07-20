@@ -31,7 +31,7 @@ func TestCorrelationTrackerRegisterAndComplete(t *testing.T) {
 	correlationID := ct.GenerateCorrelationID()
 
 	// Register correlation
-	respChan, errChan := ct.Register(correlationID)
+	_, _ = ct.Register(correlationID)
 
 	// Complete with response
 	expectedResponse := &jsonrpc.Response{
@@ -44,24 +44,21 @@ func TestCorrelationTrackerRegisterAndComplete(t *testing.T) {
 		t.Errorf("Failed to complete correlation: %v", err)
 	}
 
-	// Verify response received
-	select {
-	case response := <-respChan:
-		if response.ID != expectedResponse.ID {
-			t.Errorf("Expected response ID %s, got %s", expectedResponse.ID, response.ID)
-		}
-	case <-time.After(100 * time.Millisecond):
-		t.Error("Timeout waiting for response")
+	// ✅ FIXED: Use WaitForResponse to properly consume the response and trigger cleanup
+	response, err := ct.WaitForResponse(correlationID, 100*time.Millisecond)
+	if err != nil {
+		t.Fatalf("WaitForResponse failed: %v", err)
 	}
 
-	// Verify error channel is closed
-	select {
-	case _, ok := <-errChan:
-		if ok {
-			t.Error("Expected error channel to be closed")
-		}
-	default:
-		t.Error("Error channel not closed")
+	if response.ID != expectedResponse.ID {
+		t.Errorf("Expected response ID %s, got %s", expectedResponse.ID, response.ID)
+	}
+
+	// ✅ FIXED: After WaitForResponse, correlation should be deleted
+	// Verify correlation is deleted
+	_, err = ct.WaitForResponse(correlationID, 10*time.Millisecond)
+	if err == nil {
+		t.Error("Expected correlation to be deleted after WaitForResponse")
 	}
 }
 
@@ -72,7 +69,7 @@ func TestCorrelationTrackerCompleteWithError(t *testing.T) {
 	correlationID := ct.GenerateCorrelationID()
 
 	// Register correlation
-	respChan, errChan := ct.Register(correlationID)
+	_, _ = ct.Register(correlationID)
 
 	// Complete with error
 	expectedErr := jsonrpc.NewError(jsonrpc.ErrorCodeInternal, "test error", nil)
@@ -82,24 +79,21 @@ func TestCorrelationTrackerCompleteWithError(t *testing.T) {
 		t.Errorf("Failed to complete correlation with error: %v", err)
 	}
 
-	// Verify error received
-	select {
-	case err := <-errChan:
-		if err.Error() != expectedErr.Error() {
-			t.Errorf("Expected error %v, got %v", expectedErr, err)
-		}
-	case <-time.After(100 * time.Millisecond):
-		t.Error("Timeout waiting for error")
+	// ✅ FIXED: Use WaitForResponse to properly consume the error and trigger cleanup
+	_, err = ct.WaitForResponse(correlationID, 100*time.Millisecond)
+	if err == nil {
+		t.Error("Expected WaitForResponse to return an error")
 	}
 
-	// Verify response channel is closed
-	select {
-	case _, ok := <-respChan:
-		if ok {
-			t.Error("Expected response channel to be closed")
-		}
-	default:
-		t.Error("Response channel not closed")
+	if err.Error() != expectedErr.Error() {
+		t.Errorf("Expected error %v, got %v", expectedErr, err)
+	}
+
+	// ✅ FIXED: After WaitForResponse, correlation should be deleted
+	// Verify correlation is deleted
+	_, err = ct.WaitForResponse(correlationID, 10*time.Millisecond)
+	if err == nil {
+		t.Error("Expected correlation to be deleted after WaitForResponse")
 	}
 }
 

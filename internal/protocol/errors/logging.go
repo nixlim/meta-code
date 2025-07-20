@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"runtime"
 	"strings"
-	
+
 	"github.com/meta-mcp/meta-mcp-server/internal/logging"
 )
 
@@ -54,13 +54,13 @@ func NewErrorLogger(debugMode bool, sanitize bool) *ErrorLogger {
 		Sanitize:  sanitize,
 		Pretty:    false, // Use JSON for error logging
 	}
-	
+
 	if debugMode {
 		cfg.Level = logging.LogLevelDebug
 	}
-	
+
 	logger := logging.New(cfg)
-	
+
 	return &ErrorLogger{
 		logger:    logger,
 		debugMode: debugMode,
@@ -76,15 +76,15 @@ func (el *ErrorLogger) LogError(ctx context.Context, err error, level LogLevel, 
 
 	// Convert LogLevel to logging.LogLevel
 	logLevel := logging.LogLevel(level)
-	
+
 	// Build a logger with error context
 	logger := el.logger.WithContext(ctx)
-	
+
 	// Add MCP error fields if available
 	if mcpErr := FindMCPError(err); mcpErr != nil {
 		logger = el.addMCPErrorFields(logger, mcpErr)
 	}
-	
+
 	// Add caller information if in debug mode
 	if el.debugMode {
 		if pc, file, line, ok := runtime.Caller(1); ok {
@@ -96,7 +96,7 @@ func (el *ErrorLogger) LogError(ctx context.Context, err error, level LogLevel, 
 			}
 		}
 	}
-	
+
 	// Log using the internal LogError method which handles all log levels
 	logger.LogError(ctx, err, logLevel, message)
 }
@@ -117,7 +117,7 @@ func (el *ErrorLogger) addMCPErrorFields(logger *logging.Logger, mcpErr *MCPErro
 		WithField("error_code", mcpErr.Code).
 		WithField("error_category", mcpErr.Category).
 		WithField("error_message", mcpErr.Message)
-	
+
 	// Add context if available
 	if len(mcpErr.Context) > 0 {
 		contextMap := make(map[string]interface{})
@@ -130,16 +130,16 @@ func (el *ErrorLogger) addMCPErrorFields(logger *logging.Logger, mcpErr *MCPErro
 		}
 		logger = logger.WithField("context", contextMap)
 	}
-	
+
 	// Add debug info if in debug mode and available
 	if el.debugMode && len(mcpErr.DebugInfo) > 0 {
 		logger = logger.WithField("debug_info", mcpErr.DebugInfo)
 	}
-	
+
 	// Add cause chain if available
 	if mcpErr.Cause != nil {
 		logger = logger.WithField("cause", mcpErr.Cause.Error())
-		
+
 		// Add full error chain in debug mode
 		if el.debugMode {
 			chain := UnwrapAll(mcpErr.Cause)
@@ -152,7 +152,7 @@ func (el *ErrorLogger) addMCPErrorFields(logger *logging.Logger, mcpErr *MCPErro
 			}
 		}
 	}
-	
+
 	return logger
 }
 

@@ -18,11 +18,11 @@ type ValidationHooksConfig struct {
 // CreateValidationHooks creates hooks for validating requests based on connection state.
 func CreateValidationHooks(config ValidationHooksConfig) server.BeforeAnyHookFunc {
 	logger := logging.Default().WithComponent("validation")
-	
+
 	return func(ctx context.Context, id any, method mcp.MCPMethod, message any) {
 		logger.WithFields(logging.LogFields{
 			logging.FieldMethod: string(method),
-			"id": id,
+			"id":                id,
 		}).Debug(ctx, "BeforeAny hook triggered")
 
 		// Always allow initialize method
@@ -50,8 +50,8 @@ func CreateValidationHooks(config ValidationHooksConfig) server.BeforeAnyHookFun
 		if !conn.IsReady() {
 			state := conn.GetState()
 			logger.WithFields(logging.LogFields{
-				logging.FieldMethod: string(method),
-				logging.FieldConnectionID: conn.ID,
+				logging.FieldMethod:          string(method),
+				logging.FieldConnectionID:    conn.ID,
 				logging.FieldConnectionState: state.String(),
 			}).Warn(ctx, "Rejecting method - connection not ready")
 
@@ -65,7 +65,7 @@ func CreateValidationHooks(config ValidationHooksConfig) server.BeforeAnyHookFun
 			// to be handled by the request handler or through a custom middleware layer.
 		} else {
 			logger.WithFields(logging.LogFields{
-				logging.FieldMethod: string(method),
+				logging.FieldMethod:       string(method),
 				logging.FieldConnectionID: conn.ID,
 			}).Debug(ctx, "Allowing method - connection ready")
 		}
@@ -117,13 +117,13 @@ func CreateErrorHook(config ValidationHooksConfig) server.OnErrorHookFunc {
 		logger := logging.Default().WithComponent("validation")
 		logger.WithFields(logging.LogFields{
 			logging.FieldMethod: string(method),
-			"id": id,
+			"id":                id,
 		}).Error(ctx, err, "Error in method")
 
 		// Log connection state for debugging
 		if conn, ok := connection.ConnectionFromContext(ctx, config.ConnectionManager); ok {
 			logger.WithFields(logging.LogFields{
-				logging.FieldConnectionID: conn.ID,
+				logging.FieldConnectionID:    conn.ID,
 				logging.FieldConnectionState: conn.GetState().String(),
 			}).Debug(ctx, "Connection state during error")
 		}
@@ -138,7 +138,7 @@ func CreateSuccessHook(config ValidationHooksConfig) server.OnSuccessHookFunc {
 			logger := logging.Default().WithComponent("validation")
 			logger.WithFields(logging.LogFields{
 				logging.FieldMethod: string(method),
-				"id": id,
+				"id":                id,
 			}).Debug(ctx, "Success for method")
 		}
 	}

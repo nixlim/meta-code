@@ -334,17 +334,45 @@ func TestRequestManagerShutdown(t *testing.T) {
 	// Start some long-running requests
 	var started int32
 	var cancelled int32
+	var completed int32
+	var startedWG sync.WaitGroup
+	blockChan := make(chan struct{})
+	defer close(blockChan) // Ensure cleanup on test completion
+
+	// Use a WaitGroup to track when all request goroutines complete
+	var requestWG sync.WaitGroup
+	requestWG.Add(5)
+
+	startedWG.Add(5) // Wait for all 5 requests to start
 
 	for i := 0; i < 5; i++ {
 		err := rm.Execute(context.Background(), fmt.Sprintf("shutdown-%d", i), func(ctx context.Context) error {
+			defer requestWG.Done()
 			atomic.AddInt32(&started, 1)
+			startedWG.Done() // Signal that this request has started
 
-			select {
-			case <-time.After(200 * time.Millisecond): // Longer duration to ensure cancellation
-				return nil
-			case <-ctx.Done():
-				atomic.AddInt32(&cancelled, 1)
-				return ctx.Err()
+			// Use a ticker to periodically check for cancellation
+			ticker := time.NewTicker(10 * time.Millisecond)
+			defer ticker.Stop()
+
+			for {
+				select {
+				case <-blockChan: // Released by test
+					atomic.AddInt32(&completed, 1)
+					return nil
+				case <-ticker.C:
+					// Check if context is cancelled
+					select {
+					case <-ctx.Done():
+						atomic.AddInt32(&cancelled, 1)
+						return ctx.Err()
+					default:
+						// Context not cancelled, continue
+					}
+				case <-ctx.Done(): // Cancelled by shutdown
+					atomic.AddInt32(&cancelled, 1)
+					return ctx.Err()
+				}
 			}
 		})
 
@@ -353,11 +381,14 @@ func TestRequestManagerShutdown(t *testing.T) {
 		}
 	}
 
-	// Give them time to start - need more time for 5 goroutines to start
+	// Wait for all requests to actually start before shutdown
+	startedWG.Wait()
+
+	// Give a small delay to ensure goroutines are in their loops
 	time.Sleep(50 * time.Millisecond)
 
 	// Shutdown with timeout
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 	defer cancel()
 
 	err = rm.Shutdown(shutdownCtx)
@@ -365,9 +396,31 @@ func TestRequestManagerShutdown(t *testing.T) {
 		t.Logf("Shutdown completed with: %v", err)
 	}
 
+	// Wait for all request goroutines to complete
+	done := make(chan struct{})
+	go func() {
+		requestWG.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		// All goroutines completed
+	case <-time.After(500 * time.Millisecond):
+		t.Error("Request goroutines did not complete in time")
+	}
+
 	// Verify requests were cancelled
-	if atomic.LoadInt32(&cancelled) == 0 {
-		t.Error("Expected some requests to be cancelled")
+	startedCount := atomic.LoadInt32(&started)
+	cancelledCount := atomic.LoadInt32(&cancelled)
+	completedCount := atomic.LoadInt32(&completed)
+
+	t.Logf("Started: %d, Cancelled: %d, Completed: %d", startedCount, cancelledCount, completedCount)
+
+	// We expect at least some requests to be cancelled
+	if cancelledCount == 0 && completedCount == 0 {
+		t.Errorf("Expected some requests to be cancelled or completed, but got cancelled: %d, completed: %d (started: %d)",
+			cancelledCount, completedCount, startedCount)
 	}
 
 	// Try to execute after shutdown

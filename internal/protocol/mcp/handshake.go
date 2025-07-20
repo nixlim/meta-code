@@ -123,7 +123,7 @@ func (hs *HandshakeServer) CreateConnection(ctx context.Context, connectionID st
 	logger := logging.Default().WithComponent("handshake")
 	logger.WithFields(logging.LogFields{
 		logging.FieldConnectionID: connectionID,
-		"timeout": conn.HandshakeTimeout,
+		"timeout":                 conn.HandshakeTimeout,
 	}).Debug(ctx, "Created connection")
 
 	// Add connection ID to context
@@ -206,8 +206,8 @@ func (hs *HandshakeServer) HandleMessage(ctx context.Context, message json.RawMe
 	if req.Method != "initialize" && !conn.IsReady() {
 		logger := logging.Default().WithComponent("handshake")
 		logger.WithFields(logging.LogFields{
-			logging.FieldMethod: req.Method,
-			logging.FieldConnectionID: connID,
+			logging.FieldMethod:          req.Method,
+			logging.FieldConnectionID:    connID,
 			logging.FieldConnectionState: "not_initialized",
 		}).Warn(ctx, "Rejecting request - connection not initialized")
 		// Return not initialized error with custom code

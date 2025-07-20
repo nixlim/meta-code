@@ -21,6 +21,20 @@ var (
 type responseChannel struct {
 	response chan *jsonrpc.Response
 	error    chan error
+	closed   bool
+	mu       sync.Mutex
+}
+
+// safeClose safely closes the channels if not already closed
+func (rc *responseChannel) safeClose() {
+	rc.mu.Lock()
+	defer rc.mu.Unlock()
+
+	if !rc.closed {
+		close(rc.response)
+		close(rc.error)
+		rc.closed = true
+	}
 }
 
 // CorrelationTracker manages request/response correlation for async operations
@@ -69,18 +83,37 @@ func (ct *CorrelationTracker) Register(correlationID string) (<-chan *jsonrpc.Re
 	return respChan.response, respChan.error
 }
 
+// GetSendChannels returns send channels for direct worker access
+func (ct *CorrelationTracker) GetSendChannels(correlationID string) (chan<- *jsonrpc.Response, chan<- error, bool) {
+	value, ok := ct.pending.Load(correlationID)
+	if !ok {
+		return nil, nil, false
+	}
+
+	respChan := value.(*responseChannel)
+	return respChan.response, respChan.error, true
+}
+
 // Complete completes a correlation with a response
 func (ct *CorrelationTracker) Complete(correlationID string, response *jsonrpc.Response) error {
-	value, ok := ct.pending.LoadAndDelete(correlationID)
+	value, ok := ct.pending.Load(correlationID)
 	if !ok {
 		return ErrCorrelationNotFound
 	}
 
 	respChan := value.(*responseChannel)
+
+	// Use mutex to coordinate with safeClose()
+	respChan.mu.Lock()
+	defer respChan.mu.Unlock()
+
+	if respChan.closed {
+		return errors.New("response channel already closed")
+	}
+
 	select {
 	case respChan.response <- response:
-		close(respChan.response)
-		close(respChan.error)
+		// ✅ FIXED: Don't close channels here - let consumer handle cleanup
 	default:
 		// Channel already closed or full
 		return errors.New("response channel blocked")
@@ -91,16 +124,24 @@ func (ct *CorrelationTracker) Complete(correlationID string, response *jsonrpc.R
 
 // CompleteWithError completes a correlation with an error
 func (ct *CorrelationTracker) CompleteWithError(correlationID string, err error) error {
-	value, ok := ct.pending.LoadAndDelete(correlationID)
+	value, ok := ct.pending.Load(correlationID)
 	if !ok {
 		return ErrCorrelationNotFound
 	}
 
 	respChan := value.(*responseChannel)
+
+	// Use mutex to coordinate with safeClose()
+	respChan.mu.Lock()
+	defer respChan.mu.Unlock()
+
+	if respChan.closed {
+		return errors.New("error channel already closed")
+	}
+
 	select {
 	case respChan.error <- err:
-		close(respChan.response)
-		close(respChan.error)
+		// ✅ FIXED: Don't close channels here - let consumer handle cleanup
 	default:
 		// Channel already closed or full
 		return errors.New("error channel blocked")
@@ -117,8 +158,7 @@ func (ct *CorrelationTracker) Cancel(correlationID string) {
 	}
 
 	respChan := value.(*responseChannel)
-	close(respChan.response)
-	close(respChan.error)
+	respChan.safeClose()
 }
 
 // WaitForResponse waits for a response with the given correlation ID
@@ -136,11 +176,15 @@ func (ct *CorrelationTracker) WaitForResponse(correlationID string, timeout time
 
 		select {
 		case response := <-respChan.response:
+			respChan.safeClose()             // ✅ FIXED: Close channels after consuming response
+			ct.pending.Delete(correlationID) // ✅ FIXED: Delete after consuming response
 			return response, nil
 		case err := <-respChan.error:
+			respChan.safeClose()             // ✅ FIXED: Close channels after consuming error
+			ct.pending.Delete(correlationID) // ✅ FIXED: Delete after consuming error
 			return nil, err
 		case <-timer.C:
-			ct.Cancel(correlationID)
+			ct.Cancel(correlationID) // Cancel already handles deletion and closing
 			return nil, ErrCorrelationTimeout
 		}
 	}
@@ -148,8 +192,12 @@ func (ct *CorrelationTracker) WaitForResponse(correlationID string, timeout time
 	// No timeout, wait indefinitely
 	select {
 	case response := <-respChan.response:
+		respChan.safeClose()             // ✅ FIXED: Close channels after consuming response
+		ct.pending.Delete(correlationID) // ✅ FIXED: Delete after consuming response
 		return response, nil
 	case err := <-respChan.error:
+		respChan.safeClose()             // ✅ FIXED: Close channels after consuming error
+		ct.pending.Delete(correlationID) // ✅ FIXED: Delete after consuming error
 		return nil, err
 	}
 }

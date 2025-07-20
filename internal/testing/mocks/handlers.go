@@ -36,19 +36,19 @@ func NewMockHandler(method string) *MockHandler {
 func (m *MockHandler) Handle(ctx context.Context, req *jsonrpc.Request) *jsonrpc.Response {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.callCount++
 	m.lastRequest = req
 	m.callHistory = append(m.callHistory, req)
-	
+
 	if m.shouldPanic {
 		panic(m.panicMessage)
 	}
-	
+
 	if m.delay > 0 {
 		time.Sleep(m.delay)
 	}
-	
+
 	if m.error != nil {
 		return &jsonrpc.Response{
 			ID: req.ID,
@@ -58,14 +58,14 @@ func (m *MockHandler) Handle(ctx context.Context, req *jsonrpc.Request) *jsonrpc
 			},
 		}
 	}
-	
+
 	if m.response != nil {
 		// Clone the response and set the correct ID
 		resp := *m.response
 		resp.ID = req.ID
 		return &resp
 	}
-	
+
 	// Default success response
 	return &jsonrpc.Response{
 		ID:     req.ID,
@@ -120,7 +120,7 @@ func (m *MockHandler) GetLastRequest() *jsonrpc.Request {
 func (m *MockHandler) GetCallHistory() []*jsonrpc.Request {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	// Return a copy to prevent race conditions
 	history := make([]*jsonrpc.Request, len(m.callHistory))
 	copy(history, m.callHistory)
@@ -131,7 +131,7 @@ func (m *MockHandler) GetCallHistory() []*jsonrpc.Request {
 func (m *MockHandler) Reset() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.callCount = 0
 	m.lastRequest = nil
 	m.callHistory = make([]*jsonrpc.Request, 0)
@@ -188,31 +188,31 @@ func DelayHandler(delay time.Duration, result interface{}) MockHandlerFunc {
 func CountingHandler() (*MockHandlerFunc, func() int) {
 	var count int
 	var mu sync.Mutex
-	
+
 	handler := MockHandlerFunc(func(ctx context.Context, req *jsonrpc.Request) *jsonrpc.Response {
 		mu.Lock()
 		count++
 		currentCount := count
 		mu.Unlock()
-		
+
 		return &jsonrpc.Response{
 			ID:     req.ID,
 			Result: map[string]interface{}{"count": currentCount},
 		}
 	})
-	
+
 	getCount := func() int {
 		mu.Lock()
 		defer mu.Unlock()
 		return count
 	}
-	
+
 	return &handler, getCount
 }
 
 // ConditionalHandler returns different responses based on request content
 type ConditionalHandler struct {
-	conditions map[string]MockHandlerFunc
+	conditions     map[string]MockHandlerFunc
 	defaultHandler MockHandlerFunc
 }
 
@@ -282,11 +282,11 @@ func (r *MockHandlerRegistry) Get(method string) (*MockHandler, bool) {
 func (r *MockHandlerRegistry) GetOrCreate(method string) *MockHandler {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	
+
 	if handler, exists := r.handlers[method]; exists {
 		return handler
 	}
-	
+
 	handler := NewMockHandler(method)
 	r.handlers[method] = handler
 	return handler
@@ -296,7 +296,7 @@ func (r *MockHandlerRegistry) GetOrCreate(method string) *MockHandler {
 func (r *MockHandlerRegistry) Reset() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	
+
 	for _, handler := range r.handlers {
 		handler.Reset()
 	}
@@ -306,7 +306,7 @@ func (r *MockHandlerRegistry) Reset() {
 func (r *MockHandlerRegistry) GetMethods() []string {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	
+
 	methods := make([]string, 0, len(r.handlers))
 	for method := range r.handlers {
 		methods = append(methods, method)
@@ -317,9 +317,9 @@ func (r *MockHandlerRegistry) GetMethods() []string {
 // CreateTestHandlers creates a set of common test handlers
 func CreateTestHandlers() map[string]MockHandlerFunc {
 	return map[string]MockHandlerFunc{
-		"echo":    EchoHandler(),
-		"error":   ErrorHandler(-32000, "Test error"),
-		"slow":    DelayHandler(100*time.Millisecond, "slow response"),
+		"echo":  EchoHandler(),
+		"error": ErrorHandler(-32000, "Test error"),
+		"slow":  DelayHandler(100*time.Millisecond, "slow response"),
 		"success": func(ctx context.Context, req *jsonrpc.Request) *jsonrpc.Response {
 			return &jsonrpc.Response{
 				ID:     req.ID,
@@ -340,17 +340,17 @@ func ValidateHandlerCall(handler *MockHandler, expectedMethod string, expectedPa
 	if handler.GetCallCount() == 0 {
 		return fmt.Errorf("handler was not called")
 	}
-	
+
 	lastReq := handler.GetLastRequest()
 	if lastReq == nil {
 		return fmt.Errorf("no request recorded")
 	}
-	
+
 	if lastReq.Method != expectedMethod {
 		return fmt.Errorf("expected method %s, got %s", expectedMethod, lastReq.Method)
 	}
-	
+
 	// Additional parameter validation could be added here
-	
+
 	return nil
 }

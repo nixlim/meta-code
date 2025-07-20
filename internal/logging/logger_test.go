@@ -57,12 +57,12 @@ func TestLoggerCreation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			buf := &bytes.Buffer{}
 			tt.config.Output = buf
-			
+
 			logger := New(tt.config)
 			logger.Info(context.Background(), "test message")
-			
+
 			output := buf.String()
-			
+
 			// Check if output contains timestamp
 			if tt.want.hasTimestamp && !tt.want.isJSON {
 				// Console output has different timestamp format
@@ -74,7 +74,7 @@ func TestLoggerCreation(t *testing.T) {
 					t.Error("Expected timestamp in JSON output")
 				}
 			}
-			
+
 			// Check if output is JSON
 			if tt.want.isJSON {
 				var jsonData map[string]interface{}
@@ -94,13 +94,13 @@ func TestLoggerWithContext(t *testing.T) {
 		DebugMode: false,
 		Pretty:    false,
 	})
-	
+
 	// Create context with correlation ID
 	ctx := WithCorrelationID(context.Background(), "test-correlation-123")
-	
+
 	// Log with context
 	logger.Info(ctx, "test with correlation")
-	
+
 	// Check output contains correlation ID
 	output := buf.String()
 	if !strings.Contains(output, "test-correlation-123") {
@@ -115,20 +115,20 @@ func TestLoggerWithFields(t *testing.T) {
 		Level:  LogLevelDebug,
 		Pretty: false,
 	})
-	
+
 	// Create logger with fields
 	fieldLogger := logger.
 		WithField("component", "test").
 		WithField("version", "1.0.0")
-	
+
 	fieldLogger.Info(context.Background(), "test with fields")
-	
+
 	// Parse JSON output
 	var jsonData map[string]interface{}
 	if err := json.Unmarshal(buf.Bytes(), &jsonData); err != nil {
 		t.Fatalf("Failed to parse JSON: %v", err)
 	}
-	
+
 	// Check fields
 	if jsonData["component"] != "test" {
 		t.Error("Expected component field")
@@ -140,8 +140,8 @@ func TestLoggerWithFields(t *testing.T) {
 
 func TestLogLevels(t *testing.T) {
 	tests := []struct {
-		logLevel    LogLevel
-		shouldLog   map[LogLevel]bool
+		logLevel  LogLevel
+		shouldLog map[LogLevel]bool
 	}{
 		{
 			logLevel: LogLevelError,
@@ -164,7 +164,7 @@ func TestLogLevels(t *testing.T) {
 			},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.logLevel.String(), func(t *testing.T) {
 			for level, shouldLog := range tt.shouldLog {
@@ -174,7 +174,7 @@ func TestLogLevels(t *testing.T) {
 					Level:  tt.logLevel,
 					Pretty: false,
 				})
-				
+
 				// Log at the test level
 				switch level {
 				case LogLevelDebug:
@@ -186,7 +186,7 @@ func TestLogLevels(t *testing.T) {
 				case LogLevelError:
 					logger.Error(context.Background(), nil, "error message")
 				}
-				
+
 				hasOutput := buf.Len() > 0
 				if hasOutput != shouldLog {
 					t.Errorf("Level %s: expected output=%v, got output=%v", level.String(), shouldLog, hasOutput)
@@ -204,18 +204,18 @@ func TestErrorLogging(t *testing.T) {
 		DebugMode: true,
 		Pretty:    false,
 	})
-	
+
 	// Create a test error
 	testErr := &testError{msg: "test error", code: 123}
-	
+
 	logger.Error(context.Background(), testErr, "operation failed")
-	
+
 	// Parse output
 	var jsonData map[string]interface{}
 	if err := json.Unmarshal(buf.Bytes(), &jsonData); err != nil {
 		t.Fatalf("Failed to parse JSON: %v", err)
 	}
-	
+
 	// Check error fields
 	if jsonData["error"] != "test error" {
 		t.Error("Expected error message")
@@ -237,7 +237,7 @@ func (e *testError) Error() string {
 
 func TestStandardFieldBuilders(t *testing.T) {
 	fields := Fields()
-	
+
 	// Test request fields
 	reqFields := fields.Request("GET", "corr-123")
 	if reqFields[FieldMethod] != "GET" {
@@ -246,7 +246,7 @@ func TestStandardFieldBuilders(t *testing.T) {
 	if reqFields[FieldCorrelationID] != "corr-123" {
 		t.Error("Expected correlation ID field")
 	}
-	
+
 	// Test response fields
 	respFields := fields.Response("corr-123", 150, nil)
 	if respFields[FieldCorrelationID] != "corr-123" {
@@ -255,7 +255,7 @@ func TestStandardFieldBuilders(t *testing.T) {
 	if respFields[FieldDuration] != int64(150) {
 		t.Error("Expected duration field")
 	}
-	
+
 	// Test connection fields
 	connFields := fields.Connection("conn-456", "ready")
 	if connFields[FieldConnectionID] != "conn-456" {

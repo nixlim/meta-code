@@ -23,12 +23,12 @@ func NewSetup(t *testing.T) *TestSetup {
 		t:        t,
 		cleanups: make([]func(), 0),
 	}
-	
+
 	// Register cleanup to run all cleanup functions
 	t.Cleanup(func() {
 		setup.runCleanups()
 	})
-	
+
 	return setup
 }
 
@@ -43,7 +43,7 @@ func (s *TestSetup) AddCleanup(cleanup func()) {
 func (s *TestSetup) runCleanups() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	// Run cleanups in reverse order (LIFO)
 	for i := len(s.cleanups) - 1; i >= 0; i-- {
 		func() {
@@ -104,13 +104,13 @@ func NewTestEnvironment(t *testing.T) *TestEnvironment {
 func (e *TestEnvironment) Start() {
 	e.mu.Lock()
 	defer e.mu.Unlock()
-	
+
 	if e.started {
 		return
 	}
-	
+
 	e.started = true
-	
+
 	// Add any global setup here
 	e.setup.AddCleanup(func() {
 		e.started = false
@@ -187,14 +187,14 @@ func (tt *TestTimeout) WithTimeout(t *testing.T, fn func()) {
 // WithTimeoutDuration runs a function with a specific timeout
 func (tt *TestTimeout) WithTimeoutDuration(t *testing.T, timeout time.Duration, fn func()) {
 	t.Helper()
-	
+
 	done := make(chan struct{})
-	
+
 	go func() {
 		defer close(done)
 		fn()
 	}()
-	
+
 	select {
 	case <-done:
 		// Function completed successfully
@@ -232,12 +232,12 @@ func (wg *WaitGroup) Wait() {
 // WaitWithTimeout waits for the wait group with a timeout
 func (wg *WaitGroup) WaitWithTimeout(timeout time.Duration) {
 	done := make(chan struct{})
-	
+
 	go func() {
 		defer close(done)
 		wg.wg.Wait()
 	}()
-	
+
 	select {
 	case <-done:
 		// Wait group completed
@@ -248,11 +248,11 @@ func (wg *WaitGroup) WaitWithTimeout(timeout time.Duration) {
 
 // Barrier provides a synchronization barrier for tests
 type Barrier struct {
-	n       int
-	count   int
-	ch      chan struct{}
-	mu      sync.Mutex
-	reset   chan struct{}
+	n     int
+	count int
+	ch    chan struct{}
+	mu    sync.Mutex
+	reset chan struct{}
 }
 
 // NewBarrier creates a new barrier for n goroutines
@@ -275,7 +275,7 @@ func (b *Barrier) Wait() {
 	}
 	ch := b.ch
 	b.mu.Unlock()
-	
+
 	<-ch
 }
 
@@ -283,7 +283,7 @@ func (b *Barrier) Wait() {
 func (b *Barrier) Reset() {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	
+
 	if b.count > 0 {
 		b.count = 0
 		b.ch = make(chan struct{})
@@ -293,25 +293,25 @@ func (b *Barrier) Reset() {
 // Eventually repeatedly calls a function until it succeeds or times out
 func Eventually(t *testing.T, condition func() bool, timeout time.Duration, interval time.Duration, msgAndArgs ...interface{}) {
 	t.Helper()
-	
+
 	deadline := time.Now().Add(timeout)
-	
+
 	for time.Now().Before(deadline) {
 		if condition() {
 			return
 		}
 		time.Sleep(interval)
 	}
-	
+
 	require.Fail(t, "Condition never became true", msgAndArgs...)
 }
 
 // Never ensures a condition never becomes true within a timeout period
 func Never(t *testing.T, condition func() bool, timeout time.Duration, interval time.Duration, msgAndArgs ...interface{}) {
 	t.Helper()
-	
+
 	deadline := time.Now().Add(timeout)
-	
+
 	for time.Now().Before(deadline) {
 		if condition() {
 			require.Fail(t, "Condition became true when it should not have", msgAndArgs...)

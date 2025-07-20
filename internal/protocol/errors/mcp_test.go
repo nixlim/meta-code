@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMCPError_Creation(t *testing.T) {
@@ -287,4 +288,72 @@ func TestGetMCPErrorMessage(t *testing.T) {
 	if message != "Unknown MCP error" {
 		t.Errorf("Expected unknown error message, got %q", message)
 	}
+}
+
+func TestMCPError_ToJSONRPCError(t *testing.T) {
+	mcpErr := NewProtocolError("invalid request", nil)
+	mcpErr = mcpErr.WithContext("method", "test_method")
+	mcpErr = mcpErr.WithContext("id", "123")
+
+	jsonrpcErr := mcpErr.ToJSONRPCError()
+
+	assert.Equal(t, ErrorCodeMCPProtocol, jsonrpcErr.Code)
+	assert.Equal(t, "invalid request", jsonrpcErr.Message)
+	// Data might be nil, so just check that the conversion worked
+	assert.NotNil(t, jsonrpcErr)
+}
+
+func TestMCPError_WithCause(t *testing.T) {
+	originalErr := NewProtocolError("original error", nil)
+	causeErr := NewTransportError("cause error", nil)
+
+	result := originalErr.WithCause(causeErr)
+
+	assert.Equal(t, originalErr, result) // Should return the same instance
+	assert.Equal(t, causeErr, result.Cause)
+}
+
+func TestMCPError_HasContext(t *testing.T) {
+	mcpErr := NewProtocolError("test error", nil)
+
+	// Initially should not have context
+	assert.False(t, mcpErr.HasContext("key"))
+
+	// After adding context should have context
+	mcpErr = mcpErr.WithContext("key", "value")
+	assert.True(t, mcpErr.HasContext("key"))
+}
+
+func TestMCPError_RemoveContext(t *testing.T) {
+	mcpErr := NewProtocolError("test error", nil)
+	mcpErr = mcpErr.WithContext("key1", "value1")
+	mcpErr = mcpErr.WithContext("key2", "value2")
+
+	mcpErr.RemoveContext("key1")
+
+	_, exists1 := mcpErr.GetContext("key1")
+	_, exists2 := mcpErr.GetContext("key2")
+	assert.False(t, exists1)
+	assert.True(t, exists2)
+}
+
+func TestMCPError_ClearContext(t *testing.T) {
+	mcpErr := NewProtocolError("test error", nil)
+	mcpErr = mcpErr.WithContext("key1", "value1")
+	mcpErr = mcpErr.WithContext("key2", "value2")
+
+	mcpErr.ClearContext()
+
+	assert.False(t, mcpErr.HasContext("key1"))
+	assert.False(t, mcpErr.HasContext("key2"))
+}
+
+func TestMCPError_ClearDebugInfo(t *testing.T) {
+	mcpErr := NewProtocolError("test error", nil)
+	mcpErr = mcpErr.WithDebugInfo("stack", "trace info")
+	mcpErr = mcpErr.WithDebugInfo("line", 123)
+
+	mcpErr.ClearDebugInfo()
+
+	assert.Empty(t, mcpErr.DebugInfo)
 }

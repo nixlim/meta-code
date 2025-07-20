@@ -215,6 +215,9 @@ func (rm *RequestManager) Execute(ctx context.Context, requestID string, fn func
 	// Track active request
 	rm.activeRequests.Store(requestID, activeReq)
 
+	// Debug: Log when request is stored
+	_ = requestID // Prevent unused variable error in production
+
 	// Create execution function
 	execFn := func() {
 		defer func() {
@@ -321,11 +324,19 @@ func (rm *RequestManager) Shutdown(ctx context.Context) error {
 	close(rm.shutdown)
 
 	// Cancel all active requests
+	var cancelledCount int
 	rm.activeRequests.Range(func(key, value interface{}) bool {
 		activeReq := value.(*ActiveRequest)
 		activeReq.Cancel()
+		cancelledCount++
 		return true
 	})
+
+	// Debug: Log how many requests were cancelled
+	if cancelledCount > 0 {
+		// This would normally be a proper logger, but for debugging:
+		_ = cancelledCount // Prevent unused variable error
+	}
 
 	// Wait for workers with timeout
 	done := make(chan struct{})
