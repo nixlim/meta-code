@@ -27,10 +27,10 @@ func CreateInitializeHooks(config InitializeHooksConfig) (server.OnBeforeInitial
 	}
 
 	logger := logging.Default().WithComponent("init")
-	
+
 	// Store request data for use in afterInit
 	var requestData struct {
-		mu sync.Mutex
+		mu       sync.Mutex
 		requests map[any]*mcp.InitializeRequest
 	}
 	requestData.requests = make(map[any]*mcp.InitializeRequest)
@@ -38,7 +38,7 @@ func CreateInitializeHooks(config InitializeHooksConfig) (server.OnBeforeInitial
 	// Before initialization hook
 	beforeInit := func(ctx context.Context, id any, request *mcp.InitializeRequest) {
 		logger.WithField("request_id", id).Debug(ctx, "Before initialize hook triggered")
-		
+
 		// Store request for afterInit
 		requestData.mu.Lock()
 		requestData.requests[id] = request
@@ -56,9 +56,9 @@ func CreateInitializeHooks(config InitializeHooksConfig) (server.OnBeforeInitial
 			logger.WithField("request_id", id).Warn(ctx, "Connection not found")
 			return
 		}
-		
+
 		logger.WithFields(logging.LogFields{
-			logging.FieldConnectionID: conn.ID,
+			logging.FieldConnectionID:    conn.ID,
 			logging.FieldConnectionState: conn.GetState().String(),
 		}).Debug(ctx, "Connection state before handshake")
 
@@ -73,7 +73,7 @@ func CreateInitializeHooks(config InitializeHooksConfig) (server.OnBeforeInitial
 
 		logger.WithFields(logging.LogFields{
 			logging.FieldClientName: request.Params.ClientInfo.Name,
-			logging.FieldVersion: request.Params.ClientInfo.Version,
+			logging.FieldVersion:    request.Params.ClientInfo.Version,
 		}).Info(ctx, "Client info")
 
 		// Start handshake
@@ -108,7 +108,7 @@ func CreateInitializeHooks(config InitializeHooksConfig) (server.OnBeforeInitial
 		requestData.mu.Lock()
 		delete(requestData.requests, id)
 		requestData.mu.Unlock()
-		
+
 		// Prepare client info for handshake completion
 		clientInfo := make(map[string]interface{})
 		if message != nil {
@@ -124,7 +124,7 @@ func CreateInitializeHooks(config InitializeHooksConfig) (server.OnBeforeInitial
 		}
 
 		logger.WithFields(logging.LogFields{
-			logging.FieldConnectionID: conn.ID,
+			logging.FieldConnectionID:    conn.ID,
 			logging.FieldConnectionState: conn.GetState().String(),
 			logging.FieldProtocolVersion: result.ProtocolVersion,
 		}).Info(ctx, "Handshake completed successfully")

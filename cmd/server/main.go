@@ -16,10 +16,10 @@ func main() {
 	logConfig := logging.ConfigFromEnv()
 	logger := logging.New(logConfig)
 	logging.SetDefault(logger)
-	
+
 	// Create context with component information
 	ctx := logging.WithComponent(context.Background(), "main")
-	
+
 	// Configure the handshake-enabled server
 	config := mcp.HandshakeConfig{
 		Name:              "Meta-MCP Server",
@@ -124,11 +124,11 @@ func main() {
 	// Start the server using stdio transport with handshake support
 	logger.Info(ctx, "Starting Meta-MCP Server with handshake support...")
 	logger.WithFields(logging.LogFields{
-		"server_name": config.Name,
-		"version": config.Version,
+		"server_name":       config.Name,
+		"version":           config.Version,
 		"handshake_timeout": config.HandshakeTimeout,
 	}).Info(ctx, "Server configuration loaded")
-	
+
 	if err := mcp.ServeStdioWithHandshake(server); err != nil {
 		logger.Fatal(ctx, err, "Server error")
 	}

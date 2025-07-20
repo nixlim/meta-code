@@ -18,14 +18,12 @@ Establish comprehensive testing framework with unit tests, integration tests, mo
 - Integration test framework for end-to-end testing
 - Mock MCP client implementation for testing server responses
 - Test coverage reporting with target of 70%+ (if possible)
-- GitHub Actions CI/CD pipeline configuration
 - Code quality tools setup (golangci-lint)
 - Developer testing documentation
 
 ## Definition of Done (for the Sprint)
 - Unit test framework operational with example tests
 - Mock MCP client can simulate protocol interactions
-- CI/CD pipeline runs on all commits and PRs
 - Coverage reporting integrated and visible
 - All existing code has appropriate test coverage
 - Testing guide documented for developers

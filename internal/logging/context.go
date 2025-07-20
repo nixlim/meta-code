@@ -11,19 +11,19 @@ type contextKey string
 const (
 	// CorrelationIDKey is the context key for correlation IDs
 	CorrelationIDKey contextKey = "correlation_id"
-	
+
 	// RequestIDKey is the context key for request IDs
 	RequestIDKey contextKey = "request_id"
-	
+
 	// UserIDKey is the context key for user IDs
 	UserIDKey contextKey = "user_id"
-	
+
 	// SessionIDKey is the context key for session IDs
 	SessionIDKey contextKey = "session_id"
-	
+
 	// ComponentKey is the context key for component names
 	ComponentKey contextKey = "component"
-	
+
 	// MethodKey is the context key for method names
 	MethodKey contextKey = "method"
 )
@@ -63,18 +63,18 @@ func extractCorrelationID(ctx context.Context) string {
 	if ctx == nil {
 		return ""
 	}
-	
+
 	// Check for correlation ID in our context
 	if corrID, ok := ctx.Value(CorrelationIDKey).(string); ok {
 		return corrID
 	}
-	
+
 	// Also check for RouterContext which might have correlation ID
 	// This ensures compatibility with existing router context
 	if rc := extractRouterContext(ctx); rc != nil && rc.CorrelationID != "" {
 		return rc.CorrelationID
 	}
-	
+
 	return ""
 }
 
@@ -83,11 +83,11 @@ func extractRequestID(ctx context.Context) string {
 	if ctx == nil {
 		return ""
 	}
-	
+
 	if reqID, ok := ctx.Value(RequestIDKey).(string); ok {
 		return reqID
 	}
-	
+
 	return ""
 }
 
@@ -96,34 +96,34 @@ func extractAllContextFields(ctx context.Context) map[string]interface{} {
 	if ctx == nil {
 		return nil
 	}
-	
+
 	fields := make(map[string]interface{})
-	
+
 	// Extract standard fields
 	if corrID := extractCorrelationID(ctx); corrID != "" {
 		fields["correlation_id"] = corrID
 	}
-	
+
 	if reqID := extractRequestID(ctx); reqID != "" {
 		fields["request_id"] = reqID
 	}
-	
+
 	if userID, ok := ctx.Value(UserIDKey).(string); ok && userID != "" {
 		fields["user_id"] = userID
 	}
-	
+
 	if sessionID, ok := ctx.Value(SessionIDKey).(string); ok && sessionID != "" {
 		fields["session_id"] = sessionID
 	}
-	
+
 	if component, ok := ctx.Value(ComponentKey).(string); ok && component != "" {
 		fields["component"] = component
 	}
-	
+
 	if method, ok := ctx.Value(MethodKey).(string); ok && method != "" {
 		fields["method"] = method
 	}
-	
+
 	// Extract RouterContext fields if present
 	if rc := extractRouterContext(ctx); rc != nil {
 		if rc.Method != "" && fields["method"] == nil {
@@ -139,7 +139,7 @@ func extractAllContextFields(ctx context.Context) map[string]interface{} {
 			}
 		}
 	}
-	
+
 	return fields
 }
 
@@ -159,19 +159,19 @@ func extractRouterContext(ctx context.Context) *RouterContext {
 	if ctx == nil {
 		return nil
 	}
-	
+
 	// Try to extract router context
 	if val := ctx.Value(routerContextKey{}); val != nil {
 		// Use type assertion to check if it matches our expected structure
 		if rc, ok := val.(*RouterContext); ok {
 			return rc
 		}
-		
+
 		// If not exact match, try to extract fields using reflection
 		// This is a fallback for when we can't import the actual RouterContext type
 		// In production, you might want to use an interface instead
 	}
-	
+
 	return nil
 }
 
@@ -181,6 +181,6 @@ func ContextLogger(ctx context.Context, logger *Logger) *Logger {
 	if len(fields) == 0 {
 		return logger
 	}
-	
+
 	return logger.WithFields(fields)
 }

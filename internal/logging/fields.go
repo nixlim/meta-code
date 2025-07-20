@@ -12,7 +12,7 @@ const (
 	FieldStatusCode    = "status_code"
 	FieldDuration      = "duration_ms"
 	FieldResponseTime  = "response_time"
-	
+
 	// Error fields
 	FieldError        = "error"
 	FieldErrorCode    = "error_code"
@@ -20,16 +20,16 @@ const (
 	FieldErrorMessage = "error_message"
 	FieldStackTrace   = "stack_trace"
 	FieldCause        = "cause"
-	
+
 	// Context fields
-	FieldUserID     = "user_id"
-	FieldSessionID  = "session_id"
-	FieldClientID   = "client_id"
-	FieldComponent  = "component"
-	FieldService    = "service"
-	FieldVersion    = "version"
+	FieldUserID      = "user_id"
+	FieldSessionID   = "session_id"
+	FieldClientID    = "client_id"
+	FieldComponent   = "component"
+	FieldService     = "service"
+	FieldVersion     = "version"
 	FieldEnvironment = "environment"
-	
+
 	// MCP specific fields
 	FieldProtocolVersion = "protocol_version"
 	FieldServerName      = "server_name"
@@ -38,14 +38,14 @@ const (
 	FieldHandshakeState  = "handshake_state"
 	FieldConnectionID    = "connection_id"
 	FieldConnectionState = "connection_state"
-	
+
 	// Performance fields
 	FieldMemoryUsage = "memory_usage_bytes"
 	FieldCPUUsage    = "cpu_usage_percent"
 	FieldGoroutines  = "goroutines"
 	FieldQueueSize   = "queue_size"
 	FieldWorkerCount = "worker_count"
-	
+
 	// Metadata fields
 	FieldTimestamp = "timestamp"
 	FieldHostname  = "hostname"
@@ -75,10 +75,10 @@ func (f LogFields) WithError(err error) LogFields {
 	if err == nil {
 		return f
 	}
-	
+
 	f[FieldError] = err.Error()
 	f[FieldErrorType] = fmt.Sprintf("%T", err)
-	
+
 	// Check if error has additional properties we can extract
 	type causer interface {
 		Cause() error
@@ -88,7 +88,7 @@ func (f LogFields) WithError(err error) LogFields {
 			f[FieldCause] = c.Error()
 		}
 	}
-	
+
 	return f
 }
 
@@ -172,11 +172,11 @@ func (StandardFields) Response(correlationID string, duration int64, err error) 
 	fields := NewLogFields().
 		With(FieldCorrelationID, correlationID).
 		With(FieldDuration, duration)
-	
+
 	if err != nil {
 		fields.WithError(err)
 	}
-	
+
 	return fields
 }
 

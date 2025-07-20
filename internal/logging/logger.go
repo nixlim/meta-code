@@ -87,7 +87,7 @@ func New(cfg Config) *Logger {
 
 	// Configure zerolog
 	zerolog.SetGlobalLevel(zlLevel)
-	
+
 	var zl zerolog.Logger
 	if cfg.Pretty {
 		// Development mode with pretty console output
@@ -118,15 +118,15 @@ func New(cfg Config) *Logger {
 // WithContext returns a new Logger with context fields
 func (l *Logger) WithContext(ctx context.Context) *Logger {
 	newLogger := *l
-	
+
 	// Extract correlation ID if present
 	if corrID := extractCorrelationID(ctx); corrID != "" {
 		newLogger.logger = l.logger.With().Str("correlation_id", corrID).Logger()
 	}
-	
+
 	// Extract other context values as needed
 	// This can be extended based on your context keys
-	
+
 	return &newLogger
 }
 
@@ -206,7 +206,7 @@ func (l *Logger) LogError(ctx context.Context, err error, level LogLevel, messag
 	var callerFile string
 	var callerLine int
 	var callerFunc string
-	
+
 	if l.debugMode {
 		pc, file, line, ok := runtime.Caller(1)
 		if ok {
@@ -322,7 +322,6 @@ func Error(ctx context.Context, err error, msg string) {
 func Fatal(ctx context.Context, err error, msg string) {
 	defaultLogger.Fatal(ctx, err, msg)
 }
-
 
 // Import debug for stack traces
 var debug struct {

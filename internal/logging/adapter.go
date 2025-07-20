@@ -30,9 +30,9 @@ func (a *StdLogAdapter) Write(p []byte) (n int, err error) {
 	if len(message) > 0 && message[len(message)-1] == '\n' {
 		message = message[:len(message)-1]
 	}
-	
+
 	// Log as info level by default
 	a.logger.Info(a.ctx, message)
-	
+
 	return len(p), nil
 }

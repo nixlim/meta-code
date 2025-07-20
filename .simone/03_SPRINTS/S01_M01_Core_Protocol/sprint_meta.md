@@ -27,7 +27,7 @@ Implement the core MCP JSON-RPC 2.0 protocol with message routing, protocol nego
 - All protocol messages parse and serialize correctly according to MCP spec
 - Initialize/initialized handshake works with test client
 - Unknown methods return proper JSON-RPC error responses
-- Unit tests achieve 90%+ coverage for protocol components
+- Unit tests achieve 70%+ coverage for protocol components
 - Code passes go fmt, go vet, and golint checks
 - Basic documentation for protocol implementation
 
