@@ -5,19 +5,28 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
+	"github.com/mark3labs/mcp-go/server"
 	"github.com/meta-mcp/meta-mcp-server/internal/protocol/mcp"
 )
 
 func main() {
-	// Create a new MCP server using the mcp-go library
-	server := mcp.NewServer(
-		"Meta-MCP Server",
-		"1.0.0",
-		mcp.WithToolCapabilities(true),
-		mcp.WithResourceCapabilities(true, true),
-		mcp.WithRecovery(),
-	)
+	// Configure the handshake-enabled server
+	config := mcp.HandshakeConfig{
+		Name:              "Meta-MCP Server",
+		Version:           "1.0.0",
+		HandshakeTimeout:  30 * time.Second,
+		SupportedVersions: []string{"1.0", "0.1.0"},
+		ServerOptions: []server.ServerOption{
+			mcp.WithToolCapabilities(true),
+			mcp.WithResourceCapabilities(true, true),
+			mcp.WithRecovery(),
+		},
+	}
+	
+	// Create a new handshake-enabled MCP server
+	server := mcp.NewHandshakeServer(config)
 
 	// Add an echo tool
 	echoTool := mcp.CreateEchoTool()
@@ -104,9 +113,9 @@ func main() {
 		}, nil
 	})
 
-	// Start the server using stdio transport
-	log.Println("Starting Meta-MCP Server...")
-	if err := mcp.ServeStdio(server); err != nil {
+	// Start the server using stdio transport with handshake support
+	log.Println("Starting Meta-MCP Server with handshake support...")
+	if err := mcp.ServeStdioWithHandshake(server); err != nil {
 		log.Fatalf("Server error: %v", err)
 	}
 }
