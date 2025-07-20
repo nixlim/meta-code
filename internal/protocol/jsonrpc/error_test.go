@@ -74,7 +74,7 @@ func TestNewError(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := NewError(tt.code, tt.message, tt.data)
-			
+
 			if err.Code != tt.code {
 				t.Errorf("NewError() code = %d, want %d", err.Code, tt.code)
 			}
@@ -141,7 +141,7 @@ func TestNewStandardError(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := NewStandardError(tt.code, tt.data)
-			
+
 			if err.Code != tt.code {
 				t.Errorf("NewStandardError() code = %d, want %d", err.Code, tt.code)
 			}
@@ -226,8 +226,8 @@ func TestErrorHelperFunctions(t *testing.T) {
 
 func TestErrorClassificationFunctions(t *testing.T) {
 	tests := []struct {
-		name     string
-		testFunc func(int) bool
+		name      string
+		testFunc  func(int) bool
 		testCases []struct {
 			code     int
 			expected bool
@@ -360,7 +360,7 @@ func TestError_ToResponse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resp := tt.err.ToResponse(tt.id)
-			
+
 			if resp.Version != Version {
 				t.Errorf("ToResponse() version = %s, want %s", resp.Version, Version)
 			}
@@ -389,16 +389,16 @@ func TestValidateCode(t *testing.T) {
 		{"method not found", -32601, false},
 		{"invalid params", -32602, false},
 		{"internal error", -32603, false},
-		
+
 		// Server error range
 		{"server error start", -32000, false},
 		{"server error middle", -32050, false},
 		{"server error end", -32099, false},
-		
+
 		// Edge cases
 		{"standard range start", -32768, false},
 		{"standard range end", -32000, false},
-		
+
 		// Application-defined errors
 		{"positive code", 100, false},
 		{"zero code", 0, false},
@@ -424,18 +424,18 @@ func TestErrorJSONMarshaling(t *testing.T) {
 		expected string
 	}{
 		{
-			name: "error without data",
-			err:  &Error{Code: -32600, Message: "Invalid Request"},
+			name:     "error without data",
+			err:      &Error{Code: -32600, Message: "Invalid Request"},
 			expected: `{"code":-32600,"message":"Invalid Request"}`,
 		},
 		{
-			name: "error with string data",
-			err:  &Error{Code: -32602, Message: "Invalid params", Data: "missing field"},
+			name:     "error with string data",
+			err:      &Error{Code: -32602, Message: "Invalid params", Data: "missing field"},
 			expected: `{"code":-32602,"message":"Invalid params","data":"missing field"}`,
 		},
 		{
-			name: "error with object data",
-			err:  &Error{Code: -32603, Message: "Internal error", Data: map[string]string{"detail": "db error"}},
+			name:     "error with object data",
+			err:      &Error{Code: -32603, Message: "Internal error", Data: map[string]string{"detail": "db error"}},
 			expected: `{"code":-32603,"message":"Internal error","data":{"detail":"db error"}}`,
 		},
 	}
@@ -446,17 +446,17 @@ func TestErrorJSONMarshaling(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Failed to marshal error: %v", err)
 			}
-			
+
 			if string(data) != tt.expected {
 				t.Errorf("JSON marshal = %s, want %s", string(data), tt.expected)
 			}
-			
+
 			// Test unmarshaling
 			var unmarshaled Error
 			if err := json.Unmarshal(data, &unmarshaled); err != nil {
 				t.Fatalf("Failed to unmarshal error: %v", err)
 			}
-			
+
 			if unmarshaled.Code != tt.err.Code {
 				t.Errorf("Unmarshaled code = %d, want %d", unmarshaled.Code, tt.err.Code)
 			}
@@ -471,13 +471,13 @@ func TestErrorResponseIntegration(t *testing.T) {
 	// Test creating error responses using NewErrorResponse
 	err := NewMethodNotFoundError("test_method")
 	resp := NewErrorResponse(err, "req-123")
-	
+
 	// Marshal to JSON
 	data, marshalErr := json.Marshal(resp)
 	if marshalErr != nil {
 		t.Fatalf("Failed to marshal error response: %v", marshalErr)
 	}
-	
+
 	expected := `{"jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found","data":"test_method"},"id":"req-123"}`
 	if string(data) != expected {
 		t.Errorf("Marshaled response = %s, want %s", string(data), expected)
@@ -504,13 +504,13 @@ func TestErrorMessages(t *testing.T) {
 		ErrorCodeBadGateway,
 		ErrorCodeServiceUnavail,
 	}
-	
+
 	for _, code := range standardCodes {
 		if _, exists := errorMessages[code]; !exists {
 			t.Errorf("Error code %d missing from errorMessages map", code)
 		}
 	}
-	
+
 	// Verify message content
 	if msg := errorMessages[ErrorCodeParse]; msg != "Parse error" {
 		t.Errorf("Parse error message = %q, want %q", msg, "Parse error")
