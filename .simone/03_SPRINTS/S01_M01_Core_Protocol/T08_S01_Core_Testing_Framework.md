@@ -14,7 +14,7 @@ Implement the core unit testing framework and utilities for the MCP protocol imp
 - Create comprehensive unit test suite for all protocol components
 - Implement reusable test utilities and helpers
 - Establish table-driven testing patterns
-- Achieve 90%+ unit test coverage
+- Achieve 70%+ unit test coverage
 - Create test fixtures for common scenarios
 
 ## Acceptance Criteria

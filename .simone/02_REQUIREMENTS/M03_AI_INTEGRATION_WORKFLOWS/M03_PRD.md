@@ -103,7 +103,7 @@
 - [ ] Workflow execution overhead <100ms per step
 - [ ] Support 1000+ concurrent workflows
 - [ ] Database size <100MB for 10,000 workflows
-- [ ] 90%+ test coverage for critical paths
+- [ ] 70%+ test coverage for critical paths
 
 ### AI Quality Requirements
 - [ ] Suggestion relevance score >80%

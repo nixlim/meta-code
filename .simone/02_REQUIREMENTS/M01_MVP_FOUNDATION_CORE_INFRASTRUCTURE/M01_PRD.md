@@ -91,7 +91,7 @@
 - [ ] Graceful shutdown on signals
 
 ### Non-Functional Requirements
-- [ ] 90%+ unit test coverage for core components
+- [ ] 70%+ unit test coverage for core components
 - [ ] All code passes `go fmt`, `go vet`, and `golint`
 - [ ] Documentation for all public APIs
 - [ ] Performance: <10ms response time for protocol messages

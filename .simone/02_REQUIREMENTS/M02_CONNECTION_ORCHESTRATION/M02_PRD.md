@@ -103,7 +103,7 @@
 - [ ] Command routing overhead <5ms
 - [ ] Support 10,000 commands in catalog
 - [ ] Memory usage scales linearly with connections
-- [ ] 95%+ test coverage for connection logic
+- [ ] 70%+ test coverage for connection logic
 
 ### Integration Requirements
 - [ ] Work with common MCP servers (filesystem, git, etc.)

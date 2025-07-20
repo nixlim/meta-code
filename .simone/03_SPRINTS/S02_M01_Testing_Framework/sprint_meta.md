@@ -17,7 +17,7 @@ Establish comprehensive testing framework with unit tests, integration tests, mo
 - Unit test infrastructure setup with testify framework
 - Integration test framework for end-to-end testing
 - Mock MCP client implementation for testing server responses
-- Test coverage reporting with target of 90%+
+- Test coverage reporting with target of 70%+ (if possible)
 - GitHub Actions CI/CD pipeline configuration
 - Code quality tools setup (golangci-lint)
 - Developer testing documentation

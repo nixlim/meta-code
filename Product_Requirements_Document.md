@@ -267,7 +267,7 @@ This Product Requirements Document (PRD) translates the Meta-MCP Server business
 **Priority:** Should Have  
 
 **Specifications:**
-- **Code Coverage:** >80% unit test coverage
+- **Code Coverage:** >70% unit test coverage
 - **Documentation:** Complete API documentation and architectural decision records
 - **Modularity:** Loosely coupled components with clear interfaces
 - **Monitoring:** Comprehensive logging and metrics collection
@@ -887,7 +887,7 @@ The Meta-MCP Server will be delivered through a structured 3-phase approach over
 
 **Release 1.0 Success Criteria:**
 - [ ] All Must Have (M1-M3) requirements completed
-- [ ] 95% unit test coverage
+- [ ] 70% unit test coverage
 - [ ] Security audit passed
 - [ ] Documentation complete
 - [ ] 10+ beta testers successfully using the system
