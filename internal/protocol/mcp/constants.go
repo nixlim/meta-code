@@ -10,50 +10,50 @@ const (
 // Method name constants for MCP protocol
 const (
 	// Core protocol methods
-	MethodInitialize   = "initialize"
-	MethodInitialized  = "initialized"
-	MethodShutdown     = "shutdown"
-	MethodExit         = "exit"
-	
+	MethodInitialize  = "initialize"
+	MethodInitialized = "initialized"
+	MethodShutdown    = "shutdown"
+	MethodExit        = "exit"
+
 	// Resource methods
 	MethodListResources = "resources/list"
 	MethodReadResource  = "resources/read"
 	MethodSubscribe     = "resources/subscribe"
 	MethodUnsubscribe   = "resources/unsubscribe"
-	
+
 	// Tool methods
 	MethodListTools = "tools/list"
 	MethodCallTool  = "tools/call"
-	
+
 	// Prompt methods
 	MethodListPrompts = "prompts/list"
 	MethodGetPrompt   = "prompts/get"
-	
+
 	// Logging methods
 	MethodSetLogLevel = "logging/setLevel"
-	
+
 	// Notification methods
-	MethodNotificationCancelled      = "notifications/cancelled"
-	MethodNotificationProgress       = "notifications/progress"
+	MethodNotificationCancelled        = "notifications/cancelled"
+	MethodNotificationProgress         = "notifications/progress"
 	MethodNotificationResourcesChanged = "notifications/resources/list_changed"
-	MethodNotificationToolsChanged   = "notifications/tools/list_changed"
-	MethodNotificationPromptsChanged = "notifications/prompts/list_changed"
+	MethodNotificationToolsChanged     = "notifications/tools/list_changed"
+	MethodNotificationPromptsChanged   = "notifications/prompts/list_changed"
 )
 
 // MCP-specific error codes (extending JSON-RPC error codes)
 const (
 	// ErrorCodeInvalidRequest represents an invalid MCP request
 	ErrorCodeInvalidRequest = -32600
-	
+
 	// ErrorCodeMethodNotFound represents a method not found error
 	ErrorCodeMethodNotFound = -32601
-	
+
 	// ErrorCodeInvalidParams represents invalid parameters error
 	ErrorCodeInvalidParams = -32602
-	
+
 	// ErrorCodeInternalError represents an internal error
 	ErrorCodeInternalError = -32603
-	
+
 	// MCP-specific error codes (range: -32000 to -32099)
 	ErrorCodeResourceNotFound    = -32001
 	ErrorCodeResourceUnavailable = -32002
@@ -88,7 +88,7 @@ const (
 	CapabilityTools     = "tools"
 	CapabilityPrompts   = "prompts"
 	CapabilityLogging   = "logging"
-	
+
 	// Client capabilities
 	CapabilityRoots        = "roots"
 	CapabilitySampling     = "sampling"

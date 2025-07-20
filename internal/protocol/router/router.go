@@ -37,10 +37,10 @@ func (f NotificationHandlerFunc) HandleNotification(ctx context.Context, notific
 
 // Router provides message routing for JSON-RPC requests and notifications
 type Router struct {
-	mu                     sync.RWMutex
-	handlers               map[string]Handler
-	notificationHandlers   map[string]NotificationHandler
-	defaultHandler         Handler
+	mu                         sync.RWMutex
+	handlers                   map[string]Handler
+	notificationHandlers       map[string]NotificationHandler
+	defaultHandler             Handler
 	defaultNotificationHandler NotificationHandler
 }
 

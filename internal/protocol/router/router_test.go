@@ -46,7 +46,7 @@ func TestRouter_Register(t *testing.T) {
 
 func TestRouter_RegisterFunc(t *testing.T) {
 	router := New()
-	
+
 	router.RegisterFunc("test", func(ctx context.Context, request *jsonrpc.Request) *jsonrpc.Response {
 		return jsonrpc.NewResponse("function result", request.ID)
 	})
