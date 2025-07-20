@@ -3,7 +3,7 @@
 ## Task Metadata
 - **Task ID**: T06_S01
 - **Sprint**: S01
-- **Status**: open
+- **Status**: done
 - **Complexity**: Medium
 - **Dependencies**: T01 (JSON-RPC Types)
 
@@ -20,24 +20,24 @@ Implement standard JSON-RPC 2.0 error handling including all defined error codes
 - Ensure specification compliance for all error cases
 
 ## Acceptance Criteria
-- [ ] All JSON-RPC 2.0 error codes implemented (-32700 to -32603)
-- [ ] Error type includes code, message, and optional data fields
-- [ ] Error responses match exact JSON-RPC 2.0 format
-- [ ] Parse errors return -32700
-- [ ] Invalid Request errors return -32600
-- [ ] Method not found errors return -32601
-- [ ] Invalid params errors return -32602
-- [ ] Internal errors return -32603
+- [x] All JSON-RPC 2.0 error codes implemented (-32700 to -32603)
+- [x] Error type includes code, message, and optional data fields
+- [x] Error responses match exact JSON-RPC 2.0 format
+- [x] Parse errors return -32700
+- [x] Invalid Request errors return -32600
+- [x] Method not found errors return -32601
+- [x] Invalid params errors return -32602
+- [x] Internal errors return -32603
 
 ## Subtasks
-- [ ] Define JSON-RPC error code constants
-- [ ] Create Error struct with Code, Message, and Data fields
-- [ ] Implement NewError constructor function
-- [ ] Create error constants for each standard error
-- [ ] Implement Error() method for error interface
-- [ ] Create ToResponse() method for error formatting
-- [ ] Add validation for error code ranges
-- [ ] Write comprehensive unit tests
+- [x] Define JSON-RPC error code constants
+- [x] Create Error struct with Code, Message, and Data fields
+- [x] Implement NewError constructor function
+- [x] Create error constants for each standard error
+- [x] Implement Error() method for error interface
+- [x] Create ToResponse() method for error formatting
+- [x] Add validation for error code ranges
+- [x] Write comprehensive unit tests
 
 ## Technical Guidance
 

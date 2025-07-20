@@ -104,3 +104,20 @@ func IsServerError(code int) bool {
 func IsApplicationError(code int) bool {
 	return code < -32768 || code > -32000
 }
+
+// ToResponse creates a JSON-RPC error response from this error
+func (e *Error) ToResponse(id any) *Response {
+	return NewErrorResponse(e, id)
+}
+
+// ValidateCode validates that the error code is within valid ranges
+func ValidateCode(code int) error {
+	// JSON-RPC 2.0 spec reserves -32768 to -32000 for pre-defined errors
+	// Application-defined errors can use any other integer
+	if code >= -32768 && code <= -32000 {
+		// Valid pre-defined error range
+		return nil
+	}
+	// All other codes are valid for application-defined errors
+	return nil
+}
