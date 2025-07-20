@@ -12,6 +12,8 @@
 ## Description
 Implement the MCP protocol handshake flow including the Initialize request from clients and Initialized response from servers. This establishes the protocol version and capabilities negotiation between client and server.
 
+**NOTE**: T02_S01 has been updated to use mcp-go library. This task should leverage the mcp-go server's built-in initialization handling rather than implementing custom handshake logic.
+
 ## Goal/Objectives
 - Implement Initialize request handler
 - Implement Initialized response generation

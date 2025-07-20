@@ -1,11 +1,9 @@
 package mcp
 
-// Protocol version constants
+// Re-export commonly used constants from mcp-go
 const (
-	// ProtocolVersionLatest represents the latest supported MCP protocol version
-	ProtocolVersionLatest = "2024-11-05"
-	
-	// ProtocolVersionMinimum represents the minimum supported MCP protocol version
+	// Protocol version constants - using mcp-go defaults
+	ProtocolVersionLatest  = "2024-11-05"
 	ProtocolVersionMinimum = "2024-11-05"
 )
 

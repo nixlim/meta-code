@@ -13,6 +13,8 @@ MCP Error Extensions
 ## Description
 Extend the JSON-RPC error handling with MCP-specific error codes, error wrapping utilities, and error logging infrastructure. This task builds upon the JSON-RPC foundation to provide rich error context and debugging capabilities specific to the MCP protocol.
 
+**NOTE**: T02_S01 has been updated to use mcp-go library. This task should leverage mcp-go's built-in error handling and extend it as needed rather than implementing from scratch.
+
 ## Goal/Objectives
 - Define MCP-specific error codes and types
 - Implement error wrapping with context preservation

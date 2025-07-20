@@ -5,7 +5,7 @@ milestone_id: M01
 title: Sprint 01 - MCP Protocol Foundation
 status: planned
 goal: Implement the core MCP JSON-RPC 2.0 protocol with message routing, protocol negotiation, and initialize/initialized handshake.
-last_updated: 2025-07-20T11:30:00Z
+last_updated: 2025-07-20T15:15:00Z
 ---
 
 # Sprint: MCP Protocol Foundation (S01)
@@ -75,3 +75,11 @@ Implement the core MCP JSON-RPC 2.0 protocol with message routing, protocol nego
 - Focus on clean interfaces to support future server implementation
 - Consider using table-driven tests for protocol parsing
 - No ADRs currently exist for this sprint - technical decisions documented within tasks
+
+## Major Architecture Change (2025-07-20)
+**IMPORTANT**: T02_S01 has been significantly refactored to use the mcp-go library (github.com/mark3labs/mcp-go) instead of custom MCP protocol implementation. This provides:
+
+- **Benefits**: Standardized, battle-tested MCP implementation; automatic spec compliance; reduced maintenance burden
+- **Impact**: T05_S01 and T07_S01 should leverage mcp-go's built-in capabilities rather than implementing from scratch
+- **Integration**: Created wrapper package maintaining compatibility with existing JSON-RPC router
+- **Status**: All tests passing, build successful, example server created

@@ -15,8 +15,16 @@ The Meta-MCP Server is an orchestration platform that aggregates multiple Model 
 ### Core Technologies
 - **Language**: Go (for performance, concurrency, and easy deployment)
 - **Protocol**: MCP (Model Context Protocol) - JSON-RPC 2.0 based
+- **MCP Implementation**: github.com/mark3labs/mcp-go v0.34.0 (standardized library)
 - **Database**: Local SQLite for workflow state persistence
 - **AI Integration**: External AI APIs (OpenAI, Anthropic, etc.)
+
+### Recent Architectural Decision (2025-07-20)
+**MCP Library Integration**: Adopted github.com/mark3labs/mcp-go as the foundation for MCP protocol implementation instead of custom implementation. This provides:
+- Battle-tested, specification-compliant MCP implementation
+- Automatic compliance with protocol updates
+- Reduced development time and maintenance burden
+- Focus on core business logic rather than protocol details
 
 ### System Components
 
