@@ -1,0 +1,82 @@
+{
+  "valid_request": {
+    "jsonrpc": "2.0",
+    "method": "test_method",
+    "params": {
+      "param1": "value1",
+      "param2": 42
+    },
+    "id": "test-id-1"
+  },
+  "valid_request_no_params": {
+    "jsonrpc": "2.0",
+    "method": "simple_method",
+    "id": "test-id-2"
+  },
+  "valid_request_array_params": {
+    "jsonrpc": "2.0",
+    "method": "array_method",
+    "params": ["param1", "param2", 42],
+    "id": "test-id-3"
+  },
+  "valid_notification": {
+    "jsonrpc": "2.0",
+    "method": "notification_method",
+    "params": {
+      "message": "This is a notification"
+    }
+  },
+  "batch_request": [
+    {
+      "jsonrpc": "2.0",
+      "method": "method1",
+      "params": {"param": "value1"},
+      "id": "batch-1"
+    },
+    {
+      "jsonrpc": "2.0",
+      "method": "method2",
+      "params": {"param": "value2"},
+      "id": "batch-2"
+    },
+    {
+      "jsonrpc": "2.0",
+      "method": "notification",
+      "params": {"param": "value3"}
+    }
+  ],
+  "invalid_missing_jsonrpc": {
+    "method": "test_method",
+    "params": {"param": "value"},
+    "id": "test-id"
+  },
+  "invalid_wrong_version": {
+    "jsonrpc": "1.0",
+    "method": "test_method",
+    "params": {"param": "value"},
+    "id": "test-id"
+  },
+  "invalid_missing_method": {
+    "jsonrpc": "2.0",
+    "params": {"param": "value"},
+    "id": "test-id"
+  },
+  "invalid_empty_method": {
+    "jsonrpc": "2.0",
+    "method": "",
+    "params": {"param": "value"},
+    "id": "test-id"
+  },
+  "invalid_method_not_string": {
+    "jsonrpc": "2.0",
+    "method": 123,
+    "params": {"param": "value"},
+    "id": "test-id"
+  },
+  "invalid_params_not_structured": {
+    "jsonrpc": "2.0",
+    "method": "test_method",
+    "params": "invalid_params",
+    "id": "test-id"
+  }
+}

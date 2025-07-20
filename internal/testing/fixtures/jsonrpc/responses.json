@@ -1,0 +1,126 @@
+{
+  "valid_success_response": {
+    "jsonrpc": "2.0",
+    "result": {
+      "status": "success",
+      "data": "operation completed"
+    },
+    "id": "test-id-1"
+  },
+  "valid_success_response_null_result": {
+    "jsonrpc": "2.0",
+    "result": null,
+    "id": "test-id-2"
+  },
+  "valid_success_response_string_result": {
+    "jsonrpc": "2.0",
+    "result": "simple string result",
+    "id": "test-id-3"
+  },
+  "valid_success_response_number_result": {
+    "jsonrpc": "2.0",
+    "result": 42,
+    "id": "test-id-4"
+  },
+  "valid_success_response_array_result": {
+    "jsonrpc": "2.0",
+    "result": ["item1", "item2", "item3"],
+    "id": "test-id-5"
+  },
+  "valid_error_response": {
+    "jsonrpc": "2.0",
+    "error": {
+      "code": -32601,
+      "message": "Method not found"
+    },
+    "id": "test-id-6"
+  },
+  "valid_error_response_with_data": {
+    "jsonrpc": "2.0",
+    "error": {
+      "code": -32602,
+      "message": "Invalid params",
+      "data": {
+        "expected": "string",
+        "received": "number"
+      }
+    },
+    "id": "test-id-7"
+  },
+  "batch_response": [
+    {
+      "jsonrpc": "2.0",
+      "result": "result1",
+      "id": "batch-1"
+    },
+    {
+      "jsonrpc": "2.0",
+      "result": "result2",
+      "id": "batch-2"
+    },
+    {
+      "jsonrpc": "2.0",
+      "error": {
+        "code": -32601,
+        "message": "Method not found"
+      },
+      "id": "batch-3"
+    }
+  ],
+  "invalid_missing_jsonrpc": {
+    "result": "success",
+    "id": "test-id"
+  },
+  "invalid_wrong_version": {
+    "jsonrpc": "1.0",
+    "result": "success",
+    "id": "test-id"
+  },
+  "invalid_missing_id": {
+    "jsonrpc": "2.0",
+    "result": "success"
+  },
+  "invalid_both_result_and_error": {
+    "jsonrpc": "2.0",
+    "result": "success",
+    "error": {
+      "code": -32000,
+      "message": "Server error"
+    },
+    "id": "test-id"
+  },
+  "invalid_neither_result_nor_error": {
+    "jsonrpc": "2.0",
+    "id": "test-id"
+  },
+  "invalid_error_missing_code": {
+    "jsonrpc": "2.0",
+    "error": {
+      "message": "Error without code"
+    },
+    "id": "test-id"
+  },
+  "invalid_error_missing_message": {
+    "jsonrpc": "2.0",
+    "error": {
+      "code": -32000
+    },
+    "id": "test-id"
+  },
+  "invalid_error_code_not_number": {
+    "jsonrpc": "2.0",
+    "error": {
+      "code": "not-a-number",
+      "message": "Invalid code type"
+    },
+    "id": "test-id"
+  },
+  "invalid_error_message_not_string": {
+    "jsonrpc": "2.0",
+    "error": {
+      "code": -32000,
+      "message": 123
+    },
+    "id": "test-id"
+  }
+}

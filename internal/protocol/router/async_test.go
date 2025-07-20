@@ -401,3 +401,108 @@ func TestAsyncRouterWithMiddleware(t *testing.T) {
 		t.Error("Expected both original and middleware flags to be true")
 	}
 }
+
+// Benchmarks for async router performance
+func BenchmarkAsyncRouterHandleAsync(b *testing.B) {
+	baseRouter := New()
+	baseRouter.RegisterFunc("test.method", func(ctx context.Context, req *jsonrpc.Request) *jsonrpc.Response {
+		return jsonrpc.NewResponse(map[string]interface{}{"success": true}, req.ID)
+	})
+
+	ar := NewAsyncRouter(AsyncRouterConfig{
+		Router:    baseRouter,
+		Workers:   4,
+		QueueSize: 1000,
+	})
+
+	err := ar.Start()
+	if err != nil {
+		b.Fatalf("Failed to start router: %v", err)
+	}
+	defer ar.Shutdown(context.Background())
+
+	ctx := context.Background()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		req := jsonrpc.NewRequest("test.method", map[string]interface{}{"key": "value"}, i)
+		correlationID, err := ar.HandleAsync(ctx, req)
+		if err != nil {
+			b.Fatal("HandleAsync failed:", err)
+		}
+
+		_, err = ar.GetResponse(correlationID, 1*time.Second)
+		if err != nil {
+			b.Fatal("GetResponse failed:", err)
+		}
+	}
+}
+
+func BenchmarkAsyncRouterConcurrentRequests(b *testing.B) {
+	baseRouter := New()
+	baseRouter.RegisterFunc("test.method", func(ctx context.Context, req *jsonrpc.Request) *jsonrpc.Response {
+		return jsonrpc.NewResponse(map[string]interface{}{"success": true}, req.ID)
+	})
+
+	ar := NewAsyncRouter(AsyncRouterConfig{
+		Router:    baseRouter,
+		Workers:   8,
+		QueueSize: 10000,
+	})
+
+	err := ar.Start()
+	if err != nil {
+		b.Fatalf("Failed to start router: %v", err)
+	}
+	defer ar.Shutdown(context.Background())
+
+	ctx := context.Background()
+
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			req := jsonrpc.NewRequest("test.method", map[string]interface{}{"id": i}, i)
+			correlationID, err := ar.HandleAsync(ctx, req)
+			if err != nil {
+				b.Fatal("HandleAsync failed:", err)
+			}
+
+			_, err = ar.GetResponse(correlationID, 1*time.Second)
+			if err != nil {
+				b.Fatal("GetResponse failed:", err)
+			}
+			i++
+		}
+	})
+}
+
+func BenchmarkAsyncRouterSynchronousHandle(b *testing.B) {
+	baseRouter := New()
+	baseRouter.RegisterFunc("test.method", func(ctx context.Context, req *jsonrpc.Request) *jsonrpc.Response {
+		return jsonrpc.NewResponse(map[string]interface{}{"success": true}, req.ID)
+	})
+
+	ar := NewAsyncRouter(AsyncRouterConfig{
+		Router:    baseRouter,
+		Workers:   4,
+		QueueSize: 1000,
+	})
+
+	err := ar.Start()
+	if err != nil {
+		b.Fatalf("Failed to start router: %v", err)
+	}
+	defer ar.Shutdown(context.Background())
+
+	ctx := context.Background()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		req := jsonrpc.NewRequest("test.method", map[string]interface{}{"key": "value"}, i)
+		response := ar.Handle(ctx, req)
+		if response.Error != nil {
+			b.Fatal("Handle failed:", response.Error)
+		}
+	}
+}

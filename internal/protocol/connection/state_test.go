@@ -2,6 +2,7 @@ package connection
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -275,5 +276,116 @@ func TestConnectionFromContext(t *testing.T) {
 
 	if ok {
 		t.Error("ConnectionFromContext() ok = true for context without ID")
+	}
+}
+
+// Benchmarks for connection management performance
+func BenchmarkManagerCreateConnection(b *testing.B) {
+	manager := NewManager(10 * time.Second)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		connID := fmt.Sprintf("conn-%d", i)
+		_, err := manager.CreateConnection(connID)
+		if err != nil {
+			b.Fatal("CreateConnection failed:", err)
+		}
+	}
+}
+
+func BenchmarkManagerGetConnection(b *testing.B) {
+	manager := NewManager(10 * time.Second)
+
+	// Pre-create connections
+	for i := 0; i < 1000; i++ {
+		connID := fmt.Sprintf("conn-%d", i)
+		manager.CreateConnection(connID)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		connID := fmt.Sprintf("conn-%d", i%1000)
+		_, exists := manager.GetConnection(connID)
+		if !exists {
+			b.Fatal("Connection not found")
+		}
+	}
+}
+
+func BenchmarkConnectionStateTransition(b *testing.B) {
+	conn := &Connection{
+		ID:         "test",
+		State:      StateNew,
+		ClientInfo: make(map[string]interface{}),
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		// Reset to initial state
+		conn.State = StateNew
+
+		// Perform state transitions
+		conn.SetState(StateInitializing)
+		conn.SetState(StateReady)
+		conn.SetState(StateClosed)
+	}
+}
+
+func BenchmarkConnectionConcurrentAccess(b *testing.B) {
+	manager := NewManager(10 * time.Second)
+
+	// Pre-create connections
+	for i := 0; i < 100; i++ {
+		connID := fmt.Sprintf("conn-%d", i)
+		manager.CreateConnection(connID)
+	}
+
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			connID := fmt.Sprintf("conn-%d", i%100)
+			conn, exists := manager.GetConnection(connID)
+			if !exists {
+				b.Fatal("Connection not found")
+			}
+
+			// Simulate concurrent state access
+			_ = conn.GetState()
+			_ = conn.IsReady()
+			i++
+		}
+	})
+}
+
+func BenchmarkConnectionHandshakeFlow(b *testing.B) {
+	manager := NewManager(10 * time.Second)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		connID := fmt.Sprintf("conn-%d", i)
+		conn, err := manager.CreateConnection(connID)
+		if err != nil {
+			b.Fatal("CreateConnection failed:", err)
+		}
+
+		// Start handshake
+		err = conn.StartHandshake(nil)
+		if err != nil {
+			b.Fatal("StartHandshake failed:", err)
+		}
+
+		// Complete handshake
+		clientInfo := map[string]interface{}{
+			"name":    "test-client",
+			"version": "1.0.0",
+		}
+		err = conn.CompleteHandshake("1.0", clientInfo)
+		if err != nil {
+			b.Fatal("CompleteHandshake failed:", err)
+		}
+
+		// Clean up
+		manager.RemoveConnection(connID)
 	}
 }

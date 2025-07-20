@@ -4,9 +4,9 @@ current_milestone_id: M01
 highest_milestone: M04
 highest_sprint_in_milestone: S04
 current_sprint_id: S01
-current_task_id: T07_S01
+current_task_id: T08_S01
 status: active
-last_updated: 2025-07-20T20:35:00Z
+last_updated: 2025-07-20T22:18:00Z
 ---
 
 # Project Manifest: Meta-MCP Server
@@ -28,8 +28,8 @@ This project follows a milestone-based development approach with four major mile
 ## 2. Current Focus
 
 - **Milestone:** M01 - MVP Foundation - Core Infrastructure
-- **Sprint:** S01 - MCP Protocol Foundation (IN PROGRESS - 6/10 tasks completed)
-- **Current Task:** T07_S01 - MCP Error Extensions (NEEDS REVIEW - Code review failed on test coverage)
+- **Sprint:** S01 - MCP Protocol Foundation (IN PROGRESS - 7/10 tasks completed)
+- **Current Task:** T08_S01 - Core Testing Framework (COMPLETED - 2025-07-20 23:25)
 - **Sprint Planning:** Complete - 4 sprints planned for M01
 - **Recent Achievement:** Integrated mcp-go library for standardized MCP implementation
 
@@ -130,7 +130,11 @@ This project follows a milestone-based development approach with four major mile
 - <15 minutes time-to-first-workflow
 - >80% AI suggestion accuracy
 
-## 9. Quick Links
+## 9. General Tasks
+
+- [x] [T001: Fix Failing Router Tests - TestAsyncRouter/ConcurrentRequests and TestRequestManagerShutdown](04_GENERAL_TASKS/T001_Fix_Failing_Router_Tests.md) - Status: In Progress (Started 2025-07-20 23:53)
+
+## 10. Quick Links
 
 - **General Tasks:** [General Tasks Folder](./04_GENERAL_TASKS/)
 - **Architecture Decisions:** [ADRs](./05_ARCHITECTURE_DECISIONS/)

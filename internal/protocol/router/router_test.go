@@ -2,6 +2,7 @@ package router
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/meta-mcp/meta-mcp-server/internal/protocol/jsonrpc"
@@ -311,4 +312,81 @@ func TestNotificationHandlerFunc(t *testing.T) {
 	if !called {
 		t.Error("Expected notification handler function to be called")
 	}
+}
+
+// Benchmarks for router performance
+func BenchmarkRouterHandle(b *testing.B) {
+	router := New()
+	router.RegisterFunc("test.method", func(ctx context.Context, req *jsonrpc.Request) *jsonrpc.Response {
+		return jsonrpc.NewResponse(map[string]interface{}{"success": true}, req.ID)
+	})
+
+	request := jsonrpc.NewRequest("test.method", map[string]interface{}{"key": "value"}, 1)
+	ctx := context.Background()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		response := router.Handle(ctx, request)
+		if response.Error != nil {
+			b.Fatal("Unexpected error in benchmark")
+		}
+	}
+}
+
+func BenchmarkRouterHandleNotFound(b *testing.B) {
+	router := New()
+	request := jsonrpc.NewRequest("nonexistent.method", nil, 1)
+	ctx := context.Background()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		response := router.Handle(ctx, request)
+		if response.Error == nil {
+			b.Fatal("Expected method not found error")
+		}
+	}
+}
+
+func BenchmarkRouterHandleNotification(b *testing.B) {
+	router := New()
+	called := 0
+	router.RegisterNotificationFunc("test.notification", func(ctx context.Context, notif *jsonrpc.Notification) {
+		called++
+	})
+
+	notification := jsonrpc.NewNotification("test.notification", map[string]interface{}{"key": "value"})
+	ctx := context.Background()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		router.HandleNotification(ctx, notification)
+	}
+}
+
+func BenchmarkRouterConcurrentAccess(b *testing.B) {
+	router := New()
+
+	// Register multiple handlers
+	for i := 0; i < 10; i++ {
+		method := fmt.Sprintf("test.method%d", i)
+		router.RegisterFunc(method, func(ctx context.Context, req *jsonrpc.Request) *jsonrpc.Response {
+			return jsonrpc.NewResponse(map[string]interface{}{"method": req.Method}, req.ID)
+		})
+	}
+
+	ctx := context.Background()
+
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			method := fmt.Sprintf("test.method%d", i%10)
+			request := jsonrpc.NewRequest(method, nil, i)
+			response := router.Handle(ctx, request)
+			if response.Error != nil {
+				b.Fatal("Unexpected error in concurrent benchmark")
+			}
+			i++
+		}
+	})
 }

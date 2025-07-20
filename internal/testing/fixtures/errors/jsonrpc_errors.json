@@ -1,0 +1,106 @@
+{
+  "parse_error": {
+    "jsonrpc": "2.0",
+    "error": {
+      "code": -32700,
+      "message": "Parse error"
+    },
+    "id": null
+  },
+  "invalid_request": {
+    "jsonrpc": "2.0",
+    "error": {
+      "code": -32600,
+      "message": "Invalid Request"
+    },
+    "id": null
+  },
+  "method_not_found": {
+    "jsonrpc": "2.0",
+    "error": {
+      "code": -32601,
+      "message": "Method not found"
+    },
+    "id": "test-id"
+  },
+  "invalid_params": {
+    "jsonrpc": "2.0",
+    "error": {
+      "code": -32602,
+      "message": "Invalid params"
+    },
+    "id": "test-id"
+  },
+  "internal_error": {
+    "jsonrpc": "2.0",
+    "error": {
+      "code": -32603,
+      "message": "Internal error"
+    },
+    "id": "test-id"
+  },
+  "server_error_generic": {
+    "jsonrpc": "2.0",
+    "error": {
+      "code": -32000,
+      "message": "Server error"
+    },
+    "id": "test-id"
+  },
+  "server_error_with_data": {
+    "jsonrpc": "2.0",
+    "error": {
+      "code": -32001,
+      "message": "Server error with additional data",
+      "data": {
+        "details": "Additional error information",
+        "timestamp": "2025-07-20T22:00:00Z",
+        "context": {
+          "operation": "test_operation",
+          "parameters": ["param1", "param2"]
+        }
+      }
+    },
+    "id": "test-id"
+  },
+  "application_error": {
+    "jsonrpc": "2.0",
+    "error": {
+      "code": 1000,
+      "message": "Application-specific error"
+    },
+    "id": "test-id"
+  },
+  "timeout_error": {
+    "jsonrpc": "2.0",
+    "error": {
+      "code": -32002,
+      "message": "Request timeout"
+    },
+    "id": "test-id"
+  },
+  "rate_limit_error": {
+    "jsonrpc": "2.0",
+    "error": {
+      "code": -32003,
+      "message": "Rate limit exceeded"
+    },
+    "id": "test-id"
+  },
+  "authentication_error": {
+    "jsonrpc": "2.0",
+    "error": {
+      "code": -32004,
+      "message": "Authentication required"
+    },
+    "id": "test-id"
+  },
+  "authorization_error": {
+    "jsonrpc": "2.0",
+    "error": {
+      "code": -32005,
+      "message": "Insufficient permissions"
+    },
+    "id": "test-id"
+  }
+}

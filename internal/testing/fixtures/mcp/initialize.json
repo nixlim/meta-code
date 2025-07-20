@@ -1,0 +1,138 @@
+{
+  "valid_initialize_request": {
+    "jsonrpc": "2.0",
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2025-03-26",
+      "clientInfo": {
+        "name": "Test Client",
+        "version": "1.0.0"
+      },
+      "capabilities": {
+        "tools": {},
+        "resources": {},
+        "prompts": {}
+      }
+    },
+    "id": "init-1"
+  },
+  "valid_initialize_request_minimal": {
+    "jsonrpc": "2.0",
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2025-03-26",
+      "clientInfo": {
+        "name": "Minimal Client",
+        "version": "0.1.0"
+      }
+    },
+    "id": "init-2"
+  },
+  "valid_initialize_request_with_capabilities": {
+    "jsonrpc": "2.0",
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2025-03-26",
+      "clientInfo": {
+        "name": "Advanced Client",
+        "version": "2.0.0"
+      },
+      "capabilities": {
+        "tools": {
+          "listChanged": true
+        },
+        "resources": {
+          "subscribe": true,
+          "listChanged": true
+        },
+        "prompts": {
+          "listChanged": true
+        },
+        "logging": {}
+      }
+    },
+    "id": "init-3"
+  },
+  "valid_initialize_response": {
+    "jsonrpc": "2.0",
+    "result": {
+      "protocolVersion": "2025-03-26",
+      "serverInfo": {
+        "name": "Test Server",
+        "version": "1.0.0"
+      },
+      "capabilities": {
+        "tools": {
+          "listChanged": true
+        },
+        "resources": {
+          "subscribe": true,
+          "listChanged": true
+        },
+        "prompts": {
+          "listChanged": true
+        },
+        "logging": {}
+      }
+    },
+    "id": "init-1"
+  },
+  "valid_initialized_notification": {
+    "jsonrpc": "2.0",
+    "method": "initialized",
+    "params": {}
+  },
+  "invalid_initialize_missing_protocol_version": {
+    "jsonrpc": "2.0",
+    "method": "initialize",
+    "params": {
+      "clientInfo": {
+        "name": "Test Client",
+        "version": "1.0.0"
+      }
+    },
+    "id": "init-invalid-1"
+  },
+  "invalid_initialize_missing_client_info": {
+    "jsonrpc": "2.0",
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2025-03-26"
+    },
+    "id": "init-invalid-2"
+  },
+  "invalid_initialize_missing_client_name": {
+    "jsonrpc": "2.0",
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2025-03-26",
+      "clientInfo": {
+        "version": "1.0.0"
+      }
+    },
+    "id": "init-invalid-3"
+  },
+  "invalid_initialize_missing_client_version": {
+    "jsonrpc": "2.0",
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2025-03-26",
+      "clientInfo": {
+        "name": "Test Client"
+      }
+    },
+    "id": "init-invalid-4"
+  },
+  "invalid_initialize_unsupported_protocol": {
+    "jsonrpc": "2.0",
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "1999-01-01",
+      "clientInfo": {
+        "name": "Old Client",
+        "version": "1.0.0"
+      }
+    },
+    "id": "init-invalid-5"
+  }
+}

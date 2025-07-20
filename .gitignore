@@ -44,9 +44,6 @@ tasks.json
 .DS_Store
 
 # Directories
-.augment-guidelines/
-.claude/
-.serena/
 
 # Build artifacts
 bin/
