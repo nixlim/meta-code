@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MCP Initialized Response",
+  "type": "object",
+  "required": ["protocolVersion", "capabilities", "serverInfo"],
+  "properties": {
+    "protocolVersion": {
+      "type": "string",
+      "description": "The MCP protocol version the server is using"
+    },
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "logging": {
+          "type": "object",
+          "description": "Logging capabilities"
+        },
+        "prompts": {
+          "type": "object",
+          "properties": {
+            "listChanged": {
+              "type": "boolean",
+              "description": "Whether the server supports prompt list change notifications"
+            }
+          }
+        },
+        "resources": {
+          "type": "object",
+          "properties": {
+            "subscribe": {
+              "type": "boolean",
+              "description": "Whether the server supports resource subscriptions"
+            },
+            "listChanged": {
+              "type": "boolean",
+              "description": "Whether the server supports resource list change notifications"
+            }
+          }
+        },
+        "tools": {
+          "type": "object",
+          "properties": {
+            "listChanged": {
+              "type": "boolean",
+              "description": "Whether the server supports tool list change notifications"
+            }
+          }
+        },
+        "experimental": {
+          "type": "object",
+          "description": "Experimental capabilities"
+        }
+      },
+      "additionalProperties": false
+    },
+    "serverInfo": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the server"
+        },
+        "version": {
+          "type": "string",
+          "description": "Version of the server"
+        }
+      },
+      "additionalProperties": false
+    },
+    "instructions": {
+      "type": "string",
+      "description": "Optional instructions for using the server"
+    }
+  },
+  "additionalProperties": false
+}

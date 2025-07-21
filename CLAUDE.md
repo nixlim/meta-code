@@ -13,8 +13,8 @@ Avoid writing custom implementations if the library provides the functionality y
 
 Meta-MCP Server is an orchestration platform that aggregates multiple Model Context Protocol (MCP) servers to create intelligent, AI-driven development workflows. It acts as both an MCP client (connecting to multiple MCP servers) and an MCP server (exposing a unified interface to AI coding agents).
 
-**Current Status**: M01 Sprint S01 - MCP Protocol Foundation (50% complete, 5/10 tasks done)
-**Next Task**: T06_S01 - JSON-RPC Error Handling
+**Current Status**: M01 Sprint S01 - MCP Protocol Foundation (90% complete, 9/10 tasks done)
+**Next Task**: T10_S01 - Protocol Conformance
 
 ## Architecture
 
@@ -100,7 +100,7 @@ This project uses the Simone task management system with Claude Code slash comma
 ### Task Structure
 Tasks are located in `.simone/03_SPRINTS/S01_M01_Core_Protocol/` with format:
 - `T[ID]_S01_[Name].md` - Open tasks
-- `T[ID]_S01_[Name].md` - Completed tasks
+- `T[ID]_S01_[Name]_COMPLETED.md` - Completed tasks
 
 ### Development Workflow
 1. Use `/simone:do_task` to get next task

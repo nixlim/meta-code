@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MCP Initialize Request",
+  "type": "object",
+  "required": ["protocolVersion", "capabilities", "clientInfo"],
+  "properties": {
+    "protocolVersion": {
+      "type": "string",
+      "description": "The MCP protocol version the client wants to use"
+    },
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "roots": {
+          "type": "object",
+          "properties": {
+            "listChanged": {
+              "type": "boolean",
+              "description": "Whether the client supports root list change notifications"
+            }
+          }
+        },
+        "sampling": {
+          "type": "object",
+          "description": "Sampling capabilities"
+        },
+        "experimental": {
+          "type": "object",
+          "description": "Experimental capabilities"
+        }
+      },
+      "additionalProperties": false
+    },
+    "clientInfo": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the client"
+        },
+        "version": {
+          "type": "string",
+          "description": "Version of the client"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

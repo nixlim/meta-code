@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MCP Notification",
+  "type": "object",
+  "required": ["jsonrpc", "method"],
+  "properties": {
+    "jsonrpc": {
+      "type": "string",
+      "enum": ["2.0"]
+    },
+    "method": {
+      "type": "string",
+      "enum": [
+        "initialized",
+        "cancelled",
+        "progress",
+        "resources/updated",
+        "resources/listChanged",
+        "tools/listChanged",
+        "prompts/listChanged",
+        "message"
+      ]
+    },
+    "params": {
+      "type": "object",
+      "description": "Notification-specific parameters"
+    }
+  },
+  "additionalProperties": false
+}
