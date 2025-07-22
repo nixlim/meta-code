@@ -1,0 +1,12 @@
+{
+  "jsonrpc": "2.0",
+  "error": {
+    "code": -32602,
+    "message": "Invalid params",
+    "data": {
+      "field": "name",
+      "reason": "required field missing"
+    }
+  },
+  "id": "test-request-001"
+}

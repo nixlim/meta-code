@@ -10,7 +10,7 @@ import (
 // TestErrorHandlingConformance tests error response conformance
 func (suite *ConformanceTestSuite) TestErrorHandlingConformance(t *testing.T) {
 	ctx := context.Background()
-	
+
 	// Test standard error codes
 	t.Run("StandardErrorCodes", func(t *testing.T) {
 		tests := []struct {
@@ -113,34 +113,34 @@ func (suite *ConformanceTestSuite) TestErrorHandlingConformance(t *testing.T) {
 				description: "Invalid error with message as number instead of string",
 			},
 		}
-		
+
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				err := suite.validator.ValidateResponse(ctx, nil, tt.errorObj)
 				passed := (err == nil) == tt.shouldPass
-				
+
 				result := TestResult{
 					TestName:    fmt.Sprintf("error_code_%s", tt.name),
 					Category:    "ErrorHandling",
 					Description: tt.description,
 					Passed:      passed,
 				}
-				
+
 				if err != nil && !tt.shouldPass {
 					result.Details = fmt.Sprintf("Expected validation failure: %v", err)
 				} else if err != nil && tt.shouldPass {
 					result.Error = err.Error()
 				}
-				
+
 				suite.recordResult(result)
-				
+
 				if !passed {
 					t.Errorf("%s: expected shouldPass=%v, got error=%v", tt.name, tt.shouldPass, err)
 				}
 			})
 		}
 	})
-	
+
 	// Test error data field
 	t.Run("ErrorDataField", func(t *testing.T) {
 		tests := []struct {
@@ -206,34 +206,34 @@ func (suite *ConformanceTestSuite) TestErrorHandlingConformance(t *testing.T) {
 				description: "Valid error with null data field",
 			},
 		}
-		
+
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				err := suite.validator.ValidateResponse(ctx, nil, tt.errorObj)
 				passed := (err == nil) == tt.shouldPass
-				
+
 				result := TestResult{
 					TestName:    fmt.Sprintf("error_data_%s", tt.name),
 					Category:    "ErrorHandling",
 					Description: tt.description,
 					Passed:      passed,
 				}
-				
+
 				if err != nil && !tt.shouldPass {
 					result.Details = fmt.Sprintf("Expected validation failure: %v", err)
 				} else if err != nil && tt.shouldPass {
 					result.Error = err.Error()
 				}
-				
+
 				suite.recordResult(result)
-				
+
 				if !passed {
 					t.Errorf("%s: expected shouldPass=%v, got error=%v", tt.name, tt.shouldPass, err)
 				}
 			})
 		}
 	})
-	
+
 	// Test error response structure
 	t.Run("ErrorResponseStructure", func(t *testing.T) {
 		tests := []struct {
@@ -295,27 +295,27 @@ func (suite *ConformanceTestSuite) TestErrorHandlingConformance(t *testing.T) {
 				description: "Valid error response with null ID",
 			},
 		}
-		
+
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				err := suite.validator.ValidateMessage(ctx, "response", tt.response)
 				passed := (err == nil) == tt.shouldPass
-				
+
 				result := TestResult{
 					TestName:    fmt.Sprintf("error_structure_%s", tt.name),
 					Category:    "ErrorHandling",
 					Description: tt.description,
 					Passed:      passed,
 				}
-				
+
 				if err != nil && !tt.shouldPass {
 					result.Details = fmt.Sprintf("Expected validation failure: %v", err)
 				} else if err != nil && tt.shouldPass {
 					result.Error = err.Error()
 				}
-				
+
 				suite.recordResult(result)
-				
+
 				if !passed {
 					t.Errorf("%s: expected shouldPass=%v, got error=%v", tt.name, tt.shouldPass, err)
 				}

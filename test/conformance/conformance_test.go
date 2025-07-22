@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
-	
+
 	"github.com/meta-mcp/meta-mcp-server/internal/protocol/validator"
 )
 
@@ -52,7 +52,7 @@ func (suite *ConformanceTestSuite) recordResult(result TestResult) {
 // TestMessageStructure tests basic JSON-RPC 2.0 message structure conformance
 func (suite *ConformanceTestSuite) TestMessageStructure(t *testing.T) {
 	ctx := context.Background()
-	
+
 	tests := []struct {
 		name        string
 		message     json.RawMessage
@@ -153,27 +153,27 @@ func (suite *ConformanceTestSuite) TestMessageStructure(t *testing.T) {
 			description: "Invalid response with both result and error",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := suite.validator.ValidateMessage(ctx, tt.messageType, tt.message)
 			passed := (err == nil) == tt.shouldPass
-			
+
 			result := TestResult{
 				TestName:    tt.name,
 				Category:    "MessageStructure",
 				Description: tt.description,
 				Passed:      passed,
 			}
-			
+
 			if err != nil && !tt.shouldPass {
 				result.Details = fmt.Sprintf("Expected validation failure: %v", err)
 			} else if err != nil && tt.shouldPass {
 				result.Error = err.Error()
 			}
-			
+
 			suite.recordResult(result)
-			
+
 			if !passed {
 				t.Errorf("%s: expected shouldPass=%v, got error=%v", tt.name, tt.shouldPass, err)
 			}
@@ -184,7 +184,7 @@ func (suite *ConformanceTestSuite) TestMessageStructure(t *testing.T) {
 // TestInitializeConformance tests the initialization handshake conformance
 func (suite *ConformanceTestSuite) TestInitializeConformance(t *testing.T) {
 	ctx := context.Background()
-	
+
 	tests := []struct {
 		name        string
 		message     json.RawMessage
@@ -298,32 +298,32 @@ func (suite *ConformanceTestSuite) TestInitializeConformance(t *testing.T) {
 			description: "Initialized missing required serverInfo",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			messageType := "initialize"
 			if contains(tt.name, "initialized") {
 				messageType = "initialized"
 			}
-			
+
 			err := suite.validator.ValidateMessage(ctx, messageType, tt.message)
 			passed := (err == nil) == tt.shouldPass
-			
+
 			result := TestResult{
 				TestName:    tt.name,
 				Category:    "Initialize",
 				Description: tt.description,
 				Passed:      passed,
 			}
-			
+
 			if err != nil && !tt.shouldPass {
 				result.Details = fmt.Sprintf("Expected validation failure: %v", err)
 			} else if err != nil && tt.shouldPass {
 				result.Error = err.Error()
 			}
-			
+
 			suite.recordResult(result)
-			
+
 			if !passed {
 				t.Errorf("%s: expected shouldPass=%v, got error=%v", tt.name, tt.shouldPass, err)
 			}
@@ -341,24 +341,24 @@ func (suite *ConformanceTestSuite) GetResults() []TestResult {
 // GenerateReport generates a conformance test report
 func (suite *ConformanceTestSuite) GenerateReport() *ConformanceReport {
 	report := &ConformanceReport{
-		TotalTests:   len(suite.results),
-		TestResults:  suite.results,
-		Categories:   make(map[string]CategorySummary),
+		TotalTests:  len(suite.results),
+		TestResults: suite.results,
+		Categories:  make(map[string]CategorySummary),
 	}
-	
+
 	passed := 0
 	categoryResults := make(map[string][]TestResult)
-	
+
 	for _, result := range suite.results {
 		if result.Passed {
 			passed++
 		}
 		categoryResults[result.Category] = append(categoryResults[result.Category], result)
 	}
-	
+
 	report.PassedTests = passed
 	report.FailedTests = report.TotalTests - passed
-	
+
 	for category, results := range categoryResults {
 		categoryPassed := 0
 		for _, r := range results {
@@ -366,24 +366,24 @@ func (suite *ConformanceTestSuite) GenerateReport() *ConformanceReport {
 				categoryPassed++
 			}
 		}
-		
+
 		report.Categories[category] = CategorySummary{
 			TotalTests:  len(results),
 			PassedTests: categoryPassed,
 			FailedTests: len(results) - categoryPassed,
 		}
 	}
-	
+
 	return report
 }
 
 // ConformanceReport represents a full conformance test report
 type ConformanceReport struct {
-	TotalTests   int                         `json:"totalTests"`
-	PassedTests  int                         `json:"passedTests"`
-	FailedTests  int                         `json:"failedTests"`
-	Categories   map[string]CategorySummary  `json:"categories"`
-	TestResults  []TestResult                `json:"testResults"`
+	TotalTests  int                        `json:"totalTests"`
+	PassedTests int                        `json:"passedTests"`
+	FailedTests int                        `json:"failedTests"`
+	Categories  map[string]CategorySummary `json:"categories"`
+	TestResults []TestResult               `json:"testResults"`
 }
 
 // CategorySummary represents test results for a specific category

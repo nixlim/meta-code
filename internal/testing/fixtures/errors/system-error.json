@@ -1,0 +1,14 @@
+{
+  "code": "INTERNAL_SERVER_ERROR",
+  "message": "An unexpected error occurred",
+  "details": {
+    "error_type": "DatabaseConnectionError",
+    "timestamp": "2024-01-15T10:30:00Z",
+    "trace_id": "trace-67890",
+    "recovery_suggestions": [
+      "Check database connection",
+      "Verify credentials",
+      "Check network connectivity"
+    ]
+  }
+}

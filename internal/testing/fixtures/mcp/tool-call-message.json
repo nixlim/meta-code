@@ -1,0 +1,16 @@
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "search",
+    "arguments": {
+      "query": "test search query",
+      "limit": 10,
+      "filters": {
+        "type": "documentation",
+        "language": "go"
+      }
+    }
+  },
+  "id": "mcp-tool-001"
+}

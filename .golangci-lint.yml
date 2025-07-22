@@ -1,0 +1,172 @@
+# golangci-lint configuration for meta-mcp-server
+
+run:
+  timeout: 5m
+  tests: true
+  build-tags:
+    - integration
+  skip-dirs:
+    - vendor
+    - third_party
+    - testdata
+
+linters:
+  enable:
+    # Required linters from specification
+    - gofmt
+    - revive
+    - govet
+    - errcheck
+    - ineffassign
+    - goconst
+    - gocyclo
+    - misspell
+    # Additional useful linters
+    - staticcheck
+    - gosimple
+    - unused
+    - typecheck
+    - bodyclose
+    - dogsled
+    - dupl
+    - exportloopref
+    - funlen
+    - gocognit
+    - gocritic
+    - gofumpt
+    - goimports
+    - gosec
+    - lll
+    - makezero
+    - nakedret
+    - nestif
+    - nilerr
+    - noctx
+    - nolintlint
+    - prealloc
+    - predeclared
+    - stylecheck
+    - thelper
+    - unconvert
+    - unparam
+    - whitespace
+
+linters-settings:
+  gocyclo:
+    min-complexity: 15
+  
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+    exclude-functions:
+      - fmt.Fprintf
+      - fmt.Fprintln
+      - fmt.Fprint
+      - fmt.Printf
+      - fmt.Print
+      - fmt.Println
+  
+  funlen:
+    lines: 100
+    statements: 50
+  
+  gocognit:
+    min-complexity: 20
+  
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+  
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+  
+  gofmt:
+    simplify: true
+  
+  goimports:
+    local-prefixes: github.com/nixlim/meta-mcp-server
+  
+  lll:
+    line-length: 120
+    tab-width: 1
+  
+  misspell:
+    locale: US
+  
+  nakedret:
+    max-func-lines: 30
+  
+  nestif:
+    min-complexity: 4
+  
+  revive:
+    enable-all-rules: false
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+      - name: if-return
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unused-parameter
+      - name: unreachable-code
+      - name: redefines-builtin-id
+
+issues:
+  exclude-rules:
+    # Exclude errcheck for test files
+    - path: _test\.go
+      linters:
+        - errcheck
+        - dupl
+        - gosec
+        - goconst
+    
+    # Exclude some linters from test files
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - funlen
+        - gocognit
+    
+    # Exclude lll issues for go:generate
+    - linters:
+        - lll
+      source: "^//go:generate "
+  
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  new: false
+  fix: false
+
+severity:
+  default-severity: warning
+  rules:
+    - linters:
+        - dupl
+      severity: info
+    - linters:
+        - gosec
+        - errcheck
+      severity: error

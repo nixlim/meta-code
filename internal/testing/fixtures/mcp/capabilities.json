@@ -1,0 +1,20 @@
+{
+  "protocolVersion": "2024-11-05",
+  "capabilities": {
+    "tools": {
+      "listChanged": true
+    },
+    "resources": {
+      "subscribe": true,
+      "listChanged": true
+    },
+    "prompts": {
+      "listChanged": true
+    },
+    "logging": {}
+  },
+  "serverInfo": {
+    "name": "meta-mcp-server",
+    "version": "1.0.0"
+  }
+}

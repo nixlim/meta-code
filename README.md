@@ -29,6 +29,43 @@ Start the MCP server:
 
 The server will start and listen for MCP protocol messages via stdin/stdout.
 
+## Testing
+
+The Meta-MCP Server includes a comprehensive testing framework. See [docs/testing.md](docs/testing.md) for detailed testing guidelines.
+
+### Running Tests
+
+```bash
+# Run all tests
+go test ./...
+
+# Run tests with coverage
+go test -cover ./...
+
+# Run tests with detailed coverage report
+go test -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out
+
+# Run specific package tests
+go test ./internal/protocol/jsonrpc
+
+# Run tests with race detection
+go test -race ./...
+
+# Run benchmarks
+go test -bench=. ./...
+```
+
+### Test Coverage Goals
+
+| Package | Target Coverage |
+|---------|----------------|
+| `jsonrpc` | 93.3% |
+| `connection` | 87.0% |
+| `router` | 82.1% |
+| `mcp` | 78.5% |
+| Overall | 70%+ |
+
 ### Environment Variables
 
 Configure the server behavior with these optional environment variables:

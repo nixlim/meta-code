@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 	"time"
-	
+
 	"github.com/meta-mcp/meta-mcp-server/internal/protocol/validator"
 )
 
@@ -22,15 +22,15 @@ func TestRunFullConformanceSuite(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create validator: %v", err)
 	}
-	
+
 	// Create conformance test suite
 	suite := NewConformanceTestSuite(v)
-	
+
 	// Run all tests
 	startTime := time.Now()
 	suite.RunAll(t)
 	duration := time.Since(startTime)
-	
+
 	// Generate report
 	baseReport := suite.GenerateReport()
 	report := &EnhancedConformanceReport{
@@ -43,25 +43,25 @@ func TestRunFullConformanceSuite(t *testing.T) {
 			StrictMode:   true,
 		},
 	}
-	
+
 	// Print summary
 	fmt.Printf("\n=== MCP Protocol Conformance Test Results ===\n")
 	fmt.Printf("Total Tests: %d\n", report.TotalTests)
-	fmt.Printf("Passed: %d (%.1f%%)\n", report.PassedTests, 
+	fmt.Printf("Passed: %d (%.1f%%)\n", report.PassedTests,
 		float64(report.PassedTests)/float64(report.TotalTests)*100)
 	fmt.Printf("Failed: %d\n", report.FailedTests)
 	fmt.Printf("Duration: %s\n", report.TestDuration)
 	fmt.Printf("\n")
-	
+
 	// Print category breakdown
 	fmt.Printf("Category Breakdown:\n")
 	for category, summary := range report.Categories {
-		fmt.Printf("  %s: %d/%d passed (%.1f%%)\n", 
+		fmt.Printf("  %s: %d/%d passed (%.1f%%)\n",
 			category, summary.PassedTests, summary.TotalTests,
 			float64(summary.PassedTests)/float64(summary.TotalTests)*100)
 	}
 	fmt.Printf("\n")
-	
+
 	// Print failed tests
 	if report.FailedTests > 0 {
 		fmt.Printf("Failed Tests:\n")
@@ -72,10 +72,10 @@ func TestRunFullConformanceSuite(t *testing.T) {
 		}
 		fmt.Printf("\n")
 	}
-	
+
 	// Save detailed report to file
 	if os.Getenv("SAVE_CONFORMANCE_REPORT") == "true" {
-		reportPath := fmt.Sprintf("conformance_report_%s.json", 
+		reportPath := fmt.Sprintf("conformance_report_%s.json",
 			time.Now().Format("20060102_150405"))
 		if err := saveReport(report, reportPath); err != nil {
 			t.Errorf("Failed to save conformance report: %v", err)
@@ -83,7 +83,7 @@ func TestRunFullConformanceSuite(t *testing.T) {
 			fmt.Printf("Detailed report saved to: %s\n", reportPath)
 		}
 	}
-	
+
 	// Fail test if any conformance tests failed
 	if report.FailedTests > 0 {
 		t.Errorf("Conformance test suite failed: %d tests failed", report.FailedTests)
@@ -93,9 +93,9 @@ func TestRunFullConformanceSuite(t *testing.T) {
 // EnhancedConformanceReport extends ConformanceReport with additional fields
 type EnhancedConformanceReport struct {
 	*ConformanceReport
-	Timestamp       string            `json:"timestamp"`
-	TestDuration    string            `json:"testDuration"`
-	ValidatorConfig validator.Config  `json:"validatorConfig"`
+	Timestamp       string           `json:"timestamp"`
+	TestDuration    string           `json:"testDuration"`
+	ValidatorConfig validator.Config `json:"validatorConfig"`
 }
 
 // saveReport saves the conformance report to a JSON file
@@ -104,7 +104,7 @@ func saveReport(report *EnhancedConformanceReport, path string) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal report: %w", err)
 	}
-	
+
 	return os.WriteFile(path, data, 0644)
 }
 
@@ -117,35 +117,35 @@ func BenchmarkValidation(b *testing.B) {
 	if err != nil {
 		b.Fatalf("Failed to create validator: %v", err)
 	}
-	
+
 	ctx := context.Background()
-	
+
 	// Prepare test messages
 	initializeMsg := json.RawMessage(`{
 		"protocolVersion": "1.0",
 		"capabilities": {},
 		"clientInfo": {"name": "bench-client", "version": "1.0.0"}
 	}`)
-	
+
 	requestMsg := json.RawMessage(`{
 		"jsonrpc": "2.0",
 		"method": "tools/call",
 		"params": {"name": "test", "arguments": {}},
 		"id": "123"
 	}`)
-	
+
 	b.Run("ValidateInitialize", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			_ = v.ValidateMessage(ctx, "initialize", initializeMsg)
 		}
 	})
-	
+
 	b.Run("ValidateRequest", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			_ = v.ValidateMessage(ctx, "request", requestMsg)
 		}
 	})
-	
+
 	b.Run("ValidateWithDisabledValidator", func(b *testing.B) {
 		disabledValidator, _ := validator.New(validator.Config{Enabled: false})
 		for i := 0; i < b.N; i++ {

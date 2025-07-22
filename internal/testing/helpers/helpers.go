@@ -143,20 +143,6 @@ func (h *TestHelper) RunTableTests(tests []TableTest, testFunc func(*testing.T, 
 
 // Global helper functions that don't require a TestHelper instance
 
-// LoadFixtureGlobal loads a fixture file globally (for use in package-level tests)
-func LoadFixtureGlobal(t *testing.T, filename string, v interface{}) {
-	t.Helper()
-	helper := New(t)
-	helper.LoadFixture(filename, v)
-}
-
-// LoadFixtureStringGlobal loads a fixture file as string globally
-func LoadFixtureStringGlobal(t *testing.T, filename string) string {
-	t.Helper()
-	helper := New(t)
-	return helper.LoadFixtureString(filename)
-}
-
 // AssertJSONEqualGlobal compares JSON strings globally
 func AssertJSONEqualGlobal(t *testing.T, expected, actual string, msgAndArgs ...interface{}) {
 	t.Helper()

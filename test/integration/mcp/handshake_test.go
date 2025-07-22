@@ -473,4 +473,3 @@ func BenchmarkConcurrentHandshakes(b *testing.B) {
 		}
 	})
 }
-

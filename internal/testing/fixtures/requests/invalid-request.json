@@ -1,0 +1,8 @@
+{
+  "jsonrpc": "2.0",
+  "method": "invalid/method",
+  "params": {
+    "missing_required_field": null
+  },
+  "id": "invalid-001"
+}

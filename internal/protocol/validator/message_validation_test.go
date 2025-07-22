@@ -11,9 +11,9 @@ func TestSchemaValidator_ValidateRequest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create validator: %v", err)
 	}
-	
+
 	ctx := context.Background()
-	
+
 	tests := []struct {
 		name    string
 		method  string
@@ -51,7 +51,7 @@ func TestSchemaValidator_ValidateRequest(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validator.ValidateRequest(ctx, tt.method, tt.params)
@@ -67,9 +67,9 @@ func TestSchemaValidator_ValidateResponse(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create validator: %v", err)
 	}
-	
+
 	ctx := context.Background()
-	
+
 	tests := []struct {
 		name    string
 		result  json.RawMessage
@@ -113,7 +113,7 @@ func TestSchemaValidator_ValidateResponse(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validator.ValidateResponse(ctx, tt.result, tt.error)
@@ -129,9 +129,9 @@ func TestSchemaValidator_ValidateNotification(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create validator: %v", err)
 	}
-	
+
 	ctx := context.Background()
-	
+
 	tests := []struct {
 		name    string
 		method  string
@@ -163,7 +163,7 @@ func TestSchemaValidator_ValidateNotification(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validator.ValidateNotification(ctx, tt.method, tt.params)
@@ -179,9 +179,9 @@ func TestSchemaValidator_ValidateMessage_MCP(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create validator: %v", err)
 	}
-	
+
 	ctx := context.Background()
-	
+
 	tests := []struct {
 		name        string
 		messageType string
@@ -250,7 +250,7 @@ func TestSchemaValidator_ValidateMessage_MCP(t *testing.T) {
 			errContains: "unknown message type",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validator.ValidateMessage(ctx, tt.messageType, tt.message)

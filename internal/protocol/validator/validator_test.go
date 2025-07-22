@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"testing"
-	
+
 	"github.com/xeipuuv/gojsonschema"
 )
 
@@ -31,7 +31,7 @@ func TestSchemaValidator_New(t *testing.T) {
 			wantErr: false,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			validator, err := New(tt.config)
@@ -54,10 +54,10 @@ func TestSchemaValidator_ValidateMessage_Disabled(t *testing.T) {
 		enabled: false,
 		schemas: make(map[string]*gojsonschema.Schema),
 	}
-	
+
 	ctx := context.Background()
 	message := json.RawMessage(`{"jsonrpc": "2.0", "method": "test"}`)
-	
+
 	err := validator.ValidateMessage(ctx, "request", message)
 	if err != nil {
 		t.Errorf("ValidateMessage() with disabled validator should return nil, got %v", err)
@@ -86,7 +86,7 @@ func TestValidationError_Error(t *testing.T) {
 			want: "invalid message format",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.err.Error(); got != tt.want {
@@ -122,7 +122,7 @@ func TestMultiValidationError_Error(t *testing.T) {
 			want: "multiple validation errors (2 errors)",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.err.Error(); got != tt.want {

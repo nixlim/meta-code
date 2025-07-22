@@ -10,7 +10,7 @@ import (
 // TestProtocolVersionConformance tests protocol version negotiation conformance
 func (suite *ConformanceTestSuite) TestProtocolVersionConformance(t *testing.T) {
 	ctx := context.Background()
-	
+
 	// Test various protocol versions in initialize
 	t.Run("InitializeVersions", func(t *testing.T) {
 		tests := []struct {
@@ -50,7 +50,7 @@ func (suite *ConformanceTestSuite) TestProtocolVersionConformance(t *testing.T) 
 				description: "Semantic version with pre-release",
 			},
 		}
-		
+
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				message := json.RawMessage(fmt.Sprintf(`{
@@ -61,32 +61,32 @@ func (suite *ConformanceTestSuite) TestProtocolVersionConformance(t *testing.T) 
 						"version": "1.0.0"
 					}
 				}`, tt.version))
-				
+
 				err := suite.validator.ValidateMessage(ctx, "initialize", message)
 				passed := (err == nil) == tt.shouldPass
-				
+
 				result := TestResult{
 					TestName:    fmt.Sprintf("initialize_version_%s", tt.name),
 					Category:    "ProtocolVersion",
 					Description: tt.description,
 					Passed:      passed,
 				}
-				
+
 				if err != nil && !tt.shouldPass {
 					result.Details = fmt.Sprintf("Expected validation failure: %v", err)
 				} else if err != nil && tt.shouldPass {
 					result.Error = err.Error()
 				}
-				
+
 				suite.recordResult(result)
-				
+
 				if !passed {
 					t.Errorf("%s: expected shouldPass=%v, got error=%v", tt.name, tt.shouldPass, err)
 				}
 			})
 		}
 	})
-	
+
 	// Test version field type validation
 	t.Run("VersionFieldTypes", func(t *testing.T) {
 		tests := []struct {
@@ -147,34 +147,34 @@ func (suite *ConformanceTestSuite) TestProtocolVersionConformance(t *testing.T) 
 				description: "Missing required protocolVersion field",
 			},
 		}
-		
+
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				err := suite.validator.ValidateMessage(ctx, "initialize", tt.message)
 				passed := (err == nil) == tt.shouldPass
-				
+
 				result := TestResult{
 					TestName:    fmt.Sprintf("version_type_%s", tt.name),
 					Category:    "ProtocolVersion",
 					Description: tt.description,
 					Passed:      passed,
 				}
-				
+
 				if err != nil && !tt.shouldPass {
 					result.Details = fmt.Sprintf("Expected validation failure: %v", err)
 				} else if err != nil && tt.shouldPass {
 					result.Error = err.Error()
 				}
-				
+
 				suite.recordResult(result)
-				
+
 				if !passed {
 					t.Errorf("%s: expected shouldPass=%v, got error=%v", tt.name, tt.shouldPass, err)
 				}
 			})
 		}
 	})
-	
+
 	// Test initialized response versions
 	t.Run("InitializedVersions", func(t *testing.T) {
 		tests := []struct {
@@ -223,34 +223,34 @@ func (suite *ConformanceTestSuite) TestProtocolVersionConformance(t *testing.T) 
 				description: "Valid initialized with complex server version",
 			},
 		}
-		
+
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				err := suite.validator.ValidateMessage(ctx, "initialized", tt.message)
 				passed := (err == nil) == tt.shouldPass
-				
+
 				result := TestResult{
 					TestName:    fmt.Sprintf("initialized_%s", tt.name),
 					Category:    "ProtocolVersion",
 					Description: tt.description,
 					Passed:      passed,
 				}
-				
+
 				if err != nil && !tt.shouldPass {
 					result.Details = fmt.Sprintf("Expected validation failure: %v", err)
 				} else if err != nil && tt.shouldPass {
 					result.Error = err.Error()
 				}
-				
+
 				suite.recordResult(result)
-				
+
 				if !passed {
 					t.Errorf("%s: expected shouldPass=%v, got error=%v", tt.name, tt.shouldPass, err)
 				}
 			})
 		}
 	})
-	
+
 	// Test client/server info version fields
 	t.Run("ClientServerInfo", func(t *testing.T) {
 		tests := []struct {
@@ -330,27 +330,27 @@ func (suite *ConformanceTestSuite) TestProtocolVersionConformance(t *testing.T) 
 				description: "Invalid server info with extra fields",
 			},
 		}
-		
+
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				err := suite.validator.ValidateMessage(ctx, tt.messageType, tt.message)
 				passed := (err == nil) == tt.shouldPass
-				
+
 				result := TestResult{
 					TestName:    fmt.Sprintf("info_%s", tt.name),
 					Category:    "ProtocolVersion",
 					Description: tt.description,
 					Passed:      passed,
 				}
-				
+
 				if err != nil && !tt.shouldPass {
 					result.Details = fmt.Sprintf("Expected validation failure: %v", err)
 				} else if err != nil && tt.shouldPass {
 					result.Error = err.Error()
 				}
-				
+
 				suite.recordResult(result)
-				
+
 				if !passed {
 					t.Errorf("%s: expected shouldPass=%v, got error=%v", tt.name, tt.shouldPass, err)
 				}

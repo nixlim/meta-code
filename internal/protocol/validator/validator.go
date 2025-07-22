@@ -6,25 +6,25 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	
-	"github.com/xeipuuv/gojsonschema"
+
 	"github.com/meta-mcp/meta-mcp-server/internal/protocol/schemas"
+	"github.com/xeipuuv/gojsonschema"
 )
 
 // Validator defines the interface for MCP message validation
 type Validator interface {
 	// ValidateMessage validates a raw JSON message against the MCP schema
 	ValidateMessage(ctx context.Context, messageType string, message json.RawMessage) error
-	
+
 	// ValidateRequest validates an MCP request message
 	ValidateRequest(ctx context.Context, method string, params json.RawMessage) error
-	
+
 	// ValidateResponse validates an MCP response message
 	ValidateResponse(ctx context.Context, result json.RawMessage, error json.RawMessage) error
-	
+
 	// ValidateNotification validates an MCP notification message
 	ValidateNotification(ctx context.Context, method string, params json.RawMessage) error
-	
+
 	// IsEnabled returns whether validation is enabled
 	IsEnabled() bool
 }
@@ -37,10 +37,10 @@ type SchemaValidator struct {
 
 // ValidationError represents a schema validation error with details
 type ValidationError struct {
-	Field       string `json:"field,omitempty"`
-	Value       string `json:"value,omitempty"`
-	Message     string `json:"message"`
-	SchemaPath  string `json:"schemaPath,omitempty"`
+	Field        string `json:"field,omitempty"`
+	Value        string `json:"value,omitempty"`
+	Message      string `json:"message"`
+	SchemaPath   string `json:"schemaPath,omitempty"`
 	InstancePath string `json:"instancePath,omitempty"`
 }
 
@@ -79,13 +79,13 @@ const (
 type Config struct {
 	// Enabled determines if validation is active
 	Enabled bool
-	
+
 	// SchemaDir is the directory containing schema files
 	SchemaDir string
-	
+
 	// CacheSchemas determines if compiled schemas should be cached
 	CacheSchemas bool
-	
+
 	// StrictMode enables strict validation (fail on unknown fields)
 	StrictMode bool
 }
@@ -96,14 +96,14 @@ func New(config Config) (*SchemaValidator, error) {
 		enabled: config.Enabled,
 		schemas: make(map[string]*gojsonschema.Schema),
 	}
-	
+
 	if config.Enabled {
 		// Load and compile schemas
 		if err := validator.loadSchemas(config); err != nil {
 			return nil, fmt.Errorf("failed to load schemas: %w", err)
 		}
 	}
-	
+
 	return validator, nil
 }
 
@@ -119,7 +119,7 @@ func (v *SchemaValidator) loadSchemas(config Config) error {
 		"notification": schemas.MCPNotificationSchema,
 		"error":        schemas.MCPErrorSchema,
 	}
-	
+
 	// Compile each schema
 	for messageType, schemaJSON := range schemaMap {
 		loader := gojsonschema.NewStringLoader(schemaJSON)
@@ -129,7 +129,7 @@ func (v *SchemaValidator) loadSchemas(config Config) error {
 		}
 		v.schemas[messageType] = schema
 	}
-	
+
 	return nil
 }
 
@@ -138,23 +138,23 @@ func (v *SchemaValidator) ValidateMessage(ctx context.Context, messageType strin
 	if !v.enabled {
 		return nil
 	}
-	
+
 	schema, ok := v.schemas[messageType]
 	if !ok {
 		return fmt.Errorf("unknown message type: %s", messageType)
 	}
-	
+
 	// Validate the message
 	documentLoader := gojsonschema.NewBytesLoader(message)
 	result, err := schema.Validate(documentLoader)
 	if err != nil {
 		return fmt.Errorf("validation error: %w", err)
 	}
-	
+
 	if !result.Valid() {
 		return v.formatValidationErrors(result.Errors())
 	}
-	
+
 	return nil
 }
 
@@ -163,14 +163,14 @@ func (v *SchemaValidator) ValidateRequest(ctx context.Context, method string, pa
 	if !v.enabled {
 		return nil
 	}
-	
+
 	// Build a complete request message for validation
 	request := map[string]interface{}{
 		"jsonrpc": "2.0",
 		"method":  method,
 		"id":      "validation-test",
 	}
-	
+
 	if params != nil && len(params) > 0 && strings.TrimSpace(string(params)) != "" {
 		var p interface{}
 		if err := json.Unmarshal(params, &p); err != nil {
@@ -178,12 +178,12 @@ func (v *SchemaValidator) ValidateRequest(ctx context.Context, method string, pa
 		}
 		request["params"] = p
 	}
-	
+
 	message, err := json.Marshal(request)
 	if err != nil {
 		return fmt.Errorf("failed to marshal request: %w", err)
 	}
-	
+
 	return v.ValidateMessage(ctx, "request", message)
 }
 
@@ -192,13 +192,13 @@ func (v *SchemaValidator) ValidateResponse(ctx context.Context, result json.RawM
 	if !v.enabled {
 		return nil
 	}
-	
+
 	// Build a complete response message for validation
 	response := map[string]interface{}{
 		"jsonrpc": "2.0",
 		"id":      "validation-test",
 	}
-	
+
 	if errMsg != nil && len(errMsg) > 0 {
 		var e interface{}
 		if err := json.Unmarshal(errMsg, &e); err != nil {
@@ -214,12 +214,12 @@ func (v *SchemaValidator) ValidateResponse(ctx context.Context, result json.RawM
 	} else {
 		return fmt.Errorf("response must have either result or error")
 	}
-	
+
 	message, err := json.Marshal(response)
 	if err != nil {
 		return fmt.Errorf("failed to marshal response: %w", err)
 	}
-	
+
 	return v.ValidateMessage(ctx, "response", message)
 }
 
@@ -228,13 +228,13 @@ func (v *SchemaValidator) ValidateNotification(ctx context.Context, method strin
 	if !v.enabled {
 		return nil
 	}
-	
+
 	// Build a complete notification message for validation
 	notification := map[string]interface{}{
 		"jsonrpc": "2.0",
 		"method":  method,
 	}
-	
+
 	if params != nil && len(params) > 0 && strings.TrimSpace(string(params)) != "" {
 		var p interface{}
 		if err := json.Unmarshal(params, &p); err != nil {
@@ -242,12 +242,12 @@ func (v *SchemaValidator) ValidateNotification(ctx context.Context, method strin
 		}
 		notification["params"] = p
 	}
-	
+
 	message, err := json.Marshal(notification)
 	if err != nil {
 		return fmt.Errorf("failed to marshal notification: %w", err)
 	}
-	
+
 	return v.ValidateMessage(ctx, "notification", message)
 }
 
@@ -261,7 +261,7 @@ func (v *SchemaValidator) formatValidationErrors(errs []gojsonschema.ResultError
 	if len(errs) == 0 {
 		return nil
 	}
-	
+
 	if len(errs) == 1 {
 		err := errs[0]
 		return &ValidationError{
@@ -272,12 +272,12 @@ func (v *SchemaValidator) formatValidationErrors(errs []gojsonschema.ResultError
 			InstancePath: err.Context().String(),
 		}
 	}
-	
+
 	// Multiple errors
 	multiErr := &MultiValidationError{
 		Errors: make([]ValidationError, len(errs)),
 	}
-	
+
 	for i, err := range errs {
 		multiErr.Errors[i] = ValidationError{
 			Field:        err.Field(),
@@ -287,6 +287,6 @@ func (v *SchemaValidator) formatValidationErrors(errs []gojsonschema.ResultError
 			InstancePath: err.Context().String(),
 		}
 	}
-	
+
 	return multiErr
 }

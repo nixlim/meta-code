@@ -10,7 +10,7 @@ import (
 // TestRequestResponseConformance tests request/response pattern conformance
 func (suite *ConformanceTestSuite) TestRequestResponseConformance(t *testing.T) {
 	ctx := context.Background()
-	
+
 	// Test various request formats
 	t.Run("RequestFormats", func(t *testing.T) {
 		tests := []struct {
@@ -63,34 +63,34 @@ func (suite *ConformanceTestSuite) TestRequestResponseConformance(t *testing.T) 
 				description: "Request with malformed parameters",
 			},
 		}
-		
+
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				err := suite.validator.ValidateRequest(ctx, tt.method, tt.params)
 				passed := (err == nil) == tt.shouldPass
-				
+
 				result := TestResult{
 					TestName:    fmt.Sprintf("request_%s", tt.name),
 					Category:    "RequestResponse",
 					Description: tt.description,
 					Passed:      passed,
 				}
-				
+
 				if err != nil && !tt.shouldPass {
 					result.Details = fmt.Sprintf("Expected validation failure: %v", err)
 				} else if err != nil && tt.shouldPass {
 					result.Error = err.Error()
 				}
-				
+
 				suite.recordResult(result)
-				
+
 				if !passed {
 					t.Errorf("%s: expected shouldPass=%v, got error=%v", tt.name, tt.shouldPass, err)
 				}
 			})
 		}
 	})
-	
+
 	// Test various response formats
 	t.Run("ResponseFormats", func(t *testing.T) {
 		tests := []struct {
@@ -164,34 +164,34 @@ func (suite *ConformanceTestSuite) TestRequestResponseConformance(t *testing.T) 
 				description: "Invalid error response with non-integer code",
 			},
 		}
-		
+
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				err := suite.validator.ValidateResponse(ctx, tt.result, tt.error)
 				passed := (err == nil) == tt.shouldPass
-				
+
 				result := TestResult{
 					TestName:    fmt.Sprintf("response_%s", tt.name),
 					Category:    "RequestResponse",
 					Description: tt.description,
 					Passed:      passed,
 				}
-				
+
 				if err != nil && !tt.shouldPass {
 					result.Details = fmt.Sprintf("Expected validation failure: %v", err)
 				} else if err != nil && tt.shouldPass {
 					result.Error = err.Error()
 				}
-				
+
 				suite.recordResult(result)
-				
+
 				if !passed {
 					t.Errorf("%s: expected shouldPass=%v, got error=%v", tt.name, tt.shouldPass, err)
 				}
 			})
 		}
 	})
-	
+
 	// Test ID correlation
 	t.Run("IDCorrelation", func(t *testing.T) {
 		tests := []struct {
@@ -247,23 +247,23 @@ func (suite *ConformanceTestSuite) TestRequestResponseConformance(t *testing.T) 
 				description: "Request and response with null IDs",
 			},
 		}
-		
+
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				// Validate request
 				reqErr := suite.validator.ValidateMessage(ctx, "request", tt.request)
 				// Validate response
 				respErr := suite.validator.ValidateMessage(ctx, "response", tt.response)
-				
+
 				passed := (reqErr == nil && respErr == nil) == tt.shouldPass
-				
+
 				result := TestResult{
 					TestName:    fmt.Sprintf("id_correlation_%s", tt.name),
 					Category:    "RequestResponse",
 					Description: tt.description,
 					Passed:      passed,
 				}
-				
+
 				if reqErr != nil || respErr != nil {
 					if !tt.shouldPass {
 						result.Details = fmt.Sprintf("Expected validation failure - req: %v, resp: %v", reqErr, respErr)
@@ -271,11 +271,11 @@ func (suite *ConformanceTestSuite) TestRequestResponseConformance(t *testing.T) 
 						result.Error = fmt.Sprintf("req: %v, resp: %v", reqErr, respErr)
 					}
 				}
-				
+
 				suite.recordResult(result)
-				
+
 				if !passed {
-					t.Errorf("%s: expected shouldPass=%v, got reqErr=%v, respErr=%v", 
+					t.Errorf("%s: expected shouldPass=%v, got reqErr=%v, respErr=%v",
 						tt.name, tt.shouldPass, reqErr, respErr)
 				}
 			})

@@ -38,7 +38,7 @@ func GetSchema(messageType string) (string, bool) {
 		"notification": MCPNotificationSchema,
 		"error":        MCPErrorSchema,
 	}
-	
+
 	schema, ok := schemas[messageType]
 	return schema, ok
 }

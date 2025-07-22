@@ -10,7 +10,7 @@ import (
 // TestNotificationConformance tests notification message conformance
 func (suite *ConformanceTestSuite) TestNotificationConformance(t *testing.T) {
 	ctx := context.Background()
-	
+
 	tests := []struct {
 		name        string
 		method      string
@@ -109,37 +109,37 @@ func (suite *ConformanceTestSuite) TestNotificationConformance(t *testing.T) {
 			name:        "notification_with_array_params",
 			method:      "message",
 			params:      json.RawMessage(`["info", "test", "message"]`),
-			shouldPass:  false,  // MCP spec requires object params, not arrays
+			shouldPass:  false, // MCP spec requires object params, not arrays
 			description: "Invalid notification with array parameters (MCP requires object params)",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := suite.validator.ValidateNotification(ctx, tt.method, tt.params)
 			passed := (err == nil) == tt.shouldPass
-			
+
 			result := TestResult{
 				TestName:    fmt.Sprintf("notification_%s", tt.name),
 				Category:    "Notifications",
 				Description: tt.description,
 				Passed:      passed,
 			}
-			
+
 			if err != nil && !tt.shouldPass {
 				result.Details = fmt.Sprintf("Expected validation failure: %v", err)
 			} else if err != nil && tt.shouldPass {
 				result.Error = err.Error()
 			}
-			
+
 			suite.recordResult(result)
-			
+
 			if !passed {
 				t.Errorf("%s: expected shouldPass=%v, got error=%v", tt.name, tt.shouldPass, err)
 			}
 		})
 	}
-	
+
 	// Test that notifications don't have ID field
 	t.Run("NotificationNoID", func(t *testing.T) {
 		notificationWithID := json.RawMessage(`{
@@ -148,31 +148,31 @@ func (suite *ConformanceTestSuite) TestNotificationConformance(t *testing.T) {
 			"params": {"progress": 50},
 			"id": "123"
 		}`)
-		
+
 		// This should fail because notifications shouldn't have an ID
 		err := suite.validator.ValidateMessage(ctx, "notification", notificationWithID)
 		passed := err != nil // We expect an error
-		
+
 		result := TestResult{
 			TestName:    "notification_with_id_rejected",
 			Category:    "Notifications",
 			Description: "Notification with ID field should be rejected",
 			Passed:      passed,
 		}
-		
+
 		if err != nil {
 			result.Details = fmt.Sprintf("Correctly rejected notification with ID: %v", err)
 		} else {
 			result.Error = "Failed to reject notification with ID field"
 		}
-		
+
 		suite.recordResult(result)
-		
+
 		if !passed {
 			t.Error("Notification with ID field should be rejected")
 		}
 	})
-	
+
 	// Test notification batching
 	t.Run("NotificationBatching", func(t *testing.T) {
 		// Test that we can validate multiple notifications in sequence
@@ -185,7 +185,7 @@ func (suite *ConformanceTestSuite) TestNotificationConformance(t *testing.T) {
 			{"progress", json.RawMessage(`{"progress": 75}`)},
 			{"progress", json.RawMessage(`{"progress": 100}`)},
 		}
-		
+
 		allPassed := true
 		for i, n := range notifications {
 			err := suite.validator.ValidateNotification(ctx, n.method, n.params)
@@ -194,20 +194,20 @@ func (suite *ConformanceTestSuite) TestNotificationConformance(t *testing.T) {
 				t.Errorf("Notification %d failed: %v", i, err)
 			}
 		}
-		
+
 		result := TestResult{
 			TestName:    "notification_sequence_validation",
 			Category:    "Notifications",
 			Description: "Validate sequence of progress notifications",
 			Passed:      allPassed,
 		}
-		
+
 		if allPassed {
 			result.Details = "Successfully validated sequence of 4 progress notifications"
 		} else {
 			result.Error = "Failed to validate notification sequence"
 		}
-		
+
 		suite.recordResult(result)
 	})
 }
