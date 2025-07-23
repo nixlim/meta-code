@@ -1,5 +1,9 @@
 # T03_S02: Mock MCP Client Implementation
 
+**ID**: T03_S02  
+**Sprint**: S02 (M01 - Testing Framework)  
+**Status**: open
+
 ## Description
 Build a comprehensive mock MCP client using the mcp-go library types and interfaces to simulate realistic protocol interactions for testing. This task extends the existing MockClient foundation in `internal/testing/mcp/client.go` to provide full protocol compliance, configurable behaviors, and advanced testing capabilities including connection state management, concurrent client simulation, and handshake protocol support.
 

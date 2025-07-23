@@ -3,13 +3,17 @@
 ### Development Rules
 
 IMPORTANT:
+- ALWAYS follow (Go Best Practices)[#go-best-practices] when writing Go code.
 - When using third party libraries, use `go doc` to read the documentation and understand how to use the library correctly.
 - NEVER write custom implementations if the library provides the functionality you need.
 - ALWAYS use Zen MCP commands to debug, analyse and review the code. If facing a problem or failing tests, use `zen:debug` to understand the problem.
 - ALWAYS use Serena MCP commands to traverse the codebase and find relevant files and information.
 - If in doubt, ask the user for help or clarification.
 - Use subagents when appropriate
-
+- On conclusion of every task FOLLOW THE PROTOCOL:
+    - update memory bank
+    - write memory to Serena
+    - update .claude-updates (see (Log Update Management)[#log-update-management] for explicit instructions to be followed)
 
 # Claude Code's Memory Bank
 
@@ -777,3 +781,36 @@ Claude's thinking should feel organic and genuine, demonstrating:
 </important_reminder>
 
 </anthropic_thinking_protocol>
+
+## Log Update Management
+This set of guidelines covers how to properly manage the .claude-updates file and maintain project documentation. These rules are specific to the Culture Curious project workflow and ensure proper tracking of development changes.
+
+## Update file management
+- IMPORTANT: ALWAYS APPEND a new entry with the current timestamp and a summary of the change.
+- IMPORTANT: DO NOT overwrite existing entries in .claude-updates.
+- Follow the simple chronological format: `- DD/MM/YYYY, HH:MM:SS [am/pm] - [concise description]`
+- ALWAYS use bash date format: `date '+%d/%m/%Y, %H:%M:%S %p'` to get precise date and time.
+- Use a single line entry that captures the essential change, reason, and key files modified
+- Include testing verification and technical details in a concise manner
+- Avoid multi-section detailed formats - keep entries scannable and brief
+- Focus on what was changed, why it was changed, and verification steps in one clear sentence
+
+## Documentation workflow
+- Always update .claude-updates at the end of every development session
+- Include root cause analysis when fixing bugs or issues
+- Document both the problem and the solution implemented
+- Reference specific files that were modified
+- Include verification steps taken to confirm the fix
+
+## Development verification process
+- Always restart the server after making changes to templates, CSS, or Go code
+- Run tests with `go test ./...` before considering work complete
+- Build the project with `go build ./...` to ensure no compilation errors
+- Use browser testing to verify UI changes are working as expected
+- Take screenshots when fixing visual issues to document before/after states
+
+## Communication style
+- Provide clear explanations of root causes when debugging issues
+- Include specific technical details about what was changed
+- Document the reasoning behind implementation choices
+- Be thorough in explaining both the problem and solution
