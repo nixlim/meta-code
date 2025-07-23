@@ -1,0 +1,486 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>mcp: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/meta-mcp/meta-mcp-server/internal/protocol/mcp/handshake.go (55.1%)</option>
+				
+				<option value="file1">github.com/meta-mcp/meta-mcp-server/internal/protocol/mcp/types.go (78.3%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package mcp
+
+import (
+        "context"
+        "encoding/json"
+        "time"
+
+        "github.com/mark3labs/mcp-go/mcp"
+        "github.com/mark3labs/mcp-go/server"
+        "github.com/meta-mcp/meta-mcp-server/internal/logging"
+        "github.com/meta-mcp/meta-mcp-server/internal/protocol/connection"
+        "github.com/meta-mcp/meta-mcp-server/internal/protocol/handlers"
+)
+
+// HandshakeConfig contains configuration for the handshake-enabled server.
+type HandshakeConfig struct {
+        Name              string
+        Version           string
+        HandshakeTimeout  time.Duration
+        SupportedVersions []string
+        ServerOptions     []server.ServerOption
+}
+
+// DefaultHandshakeConfig returns a default configuration.
+func DefaultHandshakeConfig() HandshakeConfig <span class="cov8" title="1">{
+        return HandshakeConfig{
+                Name:              "Meta-MCP Server",
+                Version:           "1.0.0",
+                HandshakeTimeout:  30 * time.Second,
+                SupportedVersions: []string{"1.0", "0.1.0"},
+        }
+}</span>
+
+// HandshakeServer extends Server with connection management and handshake capabilities.
+type HandshakeServer struct {
+        *Server
+        connectionManager *connection.Manager
+        config            HandshakeConfig
+}
+
+// NewHandshakeServer creates a new MCP server with handshake support.
+func NewHandshakeServer(config HandshakeConfig) *HandshakeServer <span class="cov8" title="1">{
+        // Create connection manager
+        connManager := connection.NewManager(config.HandshakeTimeout)
+
+        // Create handshake server instance first (needed for hooks)
+        hs := &amp;HandshakeServer{
+                connectionManager: connManager,
+                config:            config,
+        }
+
+        // Create hooks
+        hooks := hs.createHooks()
+
+        // Append WithHooks to server options
+        options := append(config.ServerOptions, server.WithHooks(hooks))
+
+        // Create base server with hooks
+        baseServer := NewServer(config.Name, config.Version, options...)
+        hs.Server = baseServer
+
+        return hs
+}</span>
+
+// createHooks creates and configures all hooks for handshake management.
+func (hs *HandshakeServer) createHooks() *server.Hooks <span class="cov8" title="1">{
+        hooks := &amp;server.Hooks{}
+
+        logger := logging.Default().WithComponent("handshake")
+        logger.Debug(context.Background(), "Creating handshake hooks...")
+
+        // Create initialization hooks
+        beforeInit, afterInit := handlers.CreateInitializeHooks(handlers.InitializeHooksConfig{
+                ConnectionManager: hs.connectionManager,
+                SupportedVersions: hs.config.SupportedVersions,
+                ServerInfo: mcp.Implementation{
+                        Name:    hs.config.Name,
+                        Version: hs.config.Version,
+                },
+        })
+
+        // Create validation hooks
+        beforeAny := handlers.CreateValidationHooks(handlers.ValidationHooksConfig{
+                ConnectionManager: hs.connectionManager,
+        })
+
+        // Create error and success hooks
+        errorHook := handlers.CreateErrorHook(handlers.ValidationHooksConfig{
+                ConnectionManager: hs.connectionManager,
+        })
+
+        successHook := handlers.CreateSuccessHook(handlers.ValidationHooksConfig{
+                ConnectionManager: hs.connectionManager,
+        })
+
+        // Register all hooks
+        hooks.AddBeforeInitialize(beforeInit)
+        hooks.AddAfterInitialize(afterInit)
+        hooks.AddBeforeAny(beforeAny)
+        hooks.AddOnError(errorHook)
+        hooks.AddOnSuccess(successHook)
+
+        logger.Debug(context.Background(), "Hooks registered successfully")
+
+        return hooks
+}</span>
+
+// registerHooks sets up all the necessary hooks for handshake management.
+func (hs *HandshakeServer) registerHooks() <span class="cov0" title="0">{
+        // This method is no longer needed as we pass hooks during server creation
+        logger := logging.Default().WithComponent("handshake")
+        logger.Debug(context.Background(), "Hooks configured during server creation")
+}</span>
+
+// CreateConnection creates a new connection and returns a context with the connection ID.
+func (hs *HandshakeServer) CreateConnection(ctx context.Context, connectionID string) (context.Context, error) <span class="cov8" title="1">{
+        // Create connection in manager
+        conn, err := hs.connectionManager.CreateConnection(connectionID)
+        if err != nil </span><span class="cov8" title="1">{
+                return ctx, err
+        }</span>
+
+        <span class="cov8" title="1">logger := logging.Default().WithComponent("handshake")
+        logger.WithFields(logging.LogFields{
+                logging.FieldConnectionID: connectionID,
+                "timeout":                 conn.HandshakeTimeout,
+        }).Debug(ctx, "Created connection")
+
+        // Add connection ID to context
+        ctx = connection.WithConnectionID(ctx, connectionID)
+
+        return ctx, nil</span>
+}
+
+// CloseConnection closes a connection and cleans up resources.
+func (hs *HandshakeServer) CloseConnection(connectionID string) <span class="cov8" title="1">{
+        logger := logging.Default().WithComponent("handshake")
+        logger.WithField(logging.FieldConnectionID, connectionID).Debug(context.Background(), "Closing connection")
+        hs.connectionManager.RemoveConnection(connectionID)
+}</span>
+
+// GetConnectionManager returns the connection manager for external use.
+func (hs *HandshakeServer) GetConnectionManager() *connection.Manager <span class="cov8" title="1">{
+        return hs.connectionManager
+}</span>
+
+// ServeStdioWithHandshake starts the server with stdio transport and handshake support.
+func ServeStdioWithHandshake(hs *HandshakeServer, opts ...server.StdioOption) error <span class="cov0" title="0">{
+        // Generate a connection ID for stdio transport
+        connectionID := "stdio-" + generateConnectionID()
+
+        // Create connection context
+        ctx := context.Background()
+        ctx, err := hs.CreateConnection(ctx, connectionID)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        // Ensure connection is cleaned up on exit
+        <span class="cov0" title="0">defer hs.CloseConnection(connectionID)
+
+        logger := logging.Default().WithComponent("handshake")
+        logger.WithField(logging.FieldConnectionID, connectionID).Info(ctx, "Starting stdio server")
+
+        // Start the server
+        // Note: We need to pass the context with connection ID to the server
+        // This might require modification of mcp-go or a custom stdio implementation
+        return ServeStdio(hs.Server, opts...)</span>
+}
+
+// HandleMessage processes a JSON-RPC message with handshake validation.
+// This method enables request interception for pre-handshake validation.
+func (hs *HandshakeServer) HandleMessage(ctx context.Context, message json.RawMessage) mcp.JSONRPCMessage <span class="cov0" title="0">{
+        // Extract connection ID from context
+        connID, ok := connection.GetConnectionID(ctx)
+        if !ok </span><span class="cov0" title="0">{
+                // No connection ID means no handshake validation
+                logger := logging.Default().WithComponent("handshake")
+                logger.Warn(ctx, "No connection ID in context, proceeding without validation")
+                // Fall back to base server handling
+                return hs.Server.HandleMessage(ctx, message)
+        }</span>
+
+        // Get connection to check handshake state
+        <span class="cov0" title="0">conn, exists := hs.connectionManager.GetConnection(connID)
+        if !exists </span><span class="cov0" title="0">{
+                logger := logging.Default().WithComponent("handshake")
+                logger.WithField(logging.FieldConnectionID, connID).Error(ctx, nil, "Connection not found")
+                // Return error response
+                return mcp.NewJSONRPCError(mcp.RequestId{}, -32002, "Connection not found", nil)
+        }</span>
+
+        // Parse the request to check method
+        <span class="cov0" title="0">var req struct {
+                Method string        `json:"method"`
+                ID     mcp.RequestId `json:"id,omitempty"`
+        }
+        if err := json.Unmarshal(message, &amp;req); err != nil </span><span class="cov0" title="0">{
+                logger := logging.Default().WithComponent("handshake")
+                logger.Error(ctx, err, "Error parsing request")
+                // Return parse error
+                return mcp.NewJSONRPCError(mcp.RequestId{}, mcp.PARSE_ERROR, "Parse error", nil)
+        }</span>
+
+        // Check if connection is ready for non-initialize requests
+        <span class="cov0" title="0">if req.Method != "initialize" &amp;&amp; !conn.IsReady() </span><span class="cov0" title="0">{
+                logger := logging.Default().WithComponent("handshake")
+                logger.WithFields(logging.LogFields{
+                        logging.FieldMethod:          req.Method,
+                        logging.FieldConnectionID:    connID,
+                        logging.FieldConnectionState: "not_initialized",
+                }).Warn(ctx, "Rejecting request - connection not initialized")
+                // Return not initialized error with custom code
+                return mcp.NewJSONRPCError(req.ID, -32001, "Not initialized",
+                        "Initialize handshake must be completed before other requests")
+        }</span>
+
+        // Delegate to base server for actual handling
+        <span class="cov0" title="0">return hs.Server.HandleMessage(ctx, message)</span>
+}
+
+// generateConnectionID generates a unique connection ID.
+func generateConnectionID() string <span class="cov8" title="1">{
+        // Use timestamp with nanoseconds for uniqueness
+        // In production, consider using UUID or similar
+        return time.Now().Format("20060102-150405.000000000")
+}</span>
+
+// WithHandshakeTimeout creates a server option for handshake timeout.
+// Note: This is a placeholder - actual implementation depends on mcp-go's extensibility.
+func WithHandshakeTimeout(timeout time.Duration) func(*HandshakeConfig) <span class="cov8" title="1">{
+        return func(config *HandshakeConfig) </span><span class="cov8" title="1">{
+                config.HandshakeTimeout = timeout
+        }</span>
+}
+
+// WithSupportedVersions sets the supported protocol versions.
+func WithSupportedVersions(versions ...string) func(*HandshakeConfig) <span class="cov8" title="1">{
+        return func(config *HandshakeConfig) </span><span class="cov8" title="1">{
+                config.SupportedVersions = versions
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package mcp
+
+import (
+        "context"
+        "fmt"
+
+        "github.com/mark3labs/mcp-go/mcp"
+        "github.com/mark3labs/mcp-go/server"
+)
+
+// Server wraps the mcp-go server with additional functionality
+type Server struct {
+        *server.MCPServer
+}
+
+// NewServer creates a new MCP server using mcp-go
+func NewServer(name, version string, options ...server.ServerOption) *Server <span class="cov8" title="1">{
+        mcpServer := server.NewMCPServer(name, version, options...)
+
+        return &amp;Server{
+                MCPServer: mcpServer,
+        }
+}</span>
+
+// Type aliases for convenience
+type (
+        Tool                 = mcp.Tool
+        Resource             = mcp.Resource
+        CallToolRequest      = mcp.CallToolRequest
+        CallToolResult       = mcp.CallToolResult
+        ReadResourceRequest  = mcp.ReadResourceRequest
+        ResourceContents     = mcp.ResourceContents
+        TextResourceContents = mcp.TextResourceContents
+        ToolHandlerFunc      = server.ToolHandlerFunc
+        ResourceHandlerFunc  = server.ResourceHandlerFunc
+)
+
+// Tool creation helpers that wrap mcp-go functions
+func NewTool(name string, options ...mcp.ToolOption) mcp.Tool <span class="cov8" title="1">{
+        return mcp.NewTool(name, options...)
+}</span>
+
+// Resource creation helpers
+func NewResource(uri, name string, options ...mcp.ResourceOption) mcp.Resource <span class="cov0" title="0">{
+        return mcp.NewResource(uri, name, options...)
+}</span>
+
+// Result creation helpers
+func NewToolResultText(text string) *mcp.CallToolResult <span class="cov8" title="1">{
+        return mcp.NewToolResultText(text)
+}</span>
+
+func NewToolResultError(message string) *mcp.CallToolResult <span class="cov0" title="0">{
+        return mcp.NewToolResultError(message)
+}</span>
+
+// Tool option helpers
+func WithDescription(desc string) mcp.ToolOption <span class="cov8" title="1">{
+        return mcp.WithDescription(desc)
+}</span>
+
+func WithString(name string, options ...mcp.PropertyOption) mcp.ToolOption <span class="cov8" title="1">{
+        return mcp.WithString(name, options...)
+}</span>
+
+func WithNumber(name string, options ...mcp.PropertyOption) mcp.ToolOption <span class="cov8" title="1">{
+        return mcp.WithNumber(name, options...)
+}</span>
+
+func Required() mcp.PropertyOption <span class="cov8" title="1">{
+        return mcp.Required()
+}</span>
+
+func Description(desc string) mcp.PropertyOption <span class="cov8" title="1">{
+        return mcp.Description(desc)
+}</span>
+
+// Server methods that integrate with mcp-go
+func (s *Server) AddTool(tool mcp.Tool, handler ToolHandlerFunc) <span class="cov8" title="1">{
+        s.MCPServer.AddTool(tool, handler)
+}</span>
+
+func (s *Server) AddResource(resource mcp.Resource, handler ResourceHandlerFunc) <span class="cov0" title="0">{
+        s.MCPServer.AddResource(resource, handler)
+}</span>
+
+// ServeStdio starts the server using stdio transport
+func ServeStdio(s *Server, opts ...server.StdioOption) error <span class="cov0" title="0">{
+        return server.ServeStdio(s.MCPServer, opts...)
+}</span>
+
+// Server option helpers
+func WithToolCapabilities(listChanged bool) server.ServerOption <span class="cov8" title="1">{
+        return server.WithToolCapabilities(listChanged)
+}</span>
+
+func WithResourceCapabilities(subscribe, listChanged bool) server.ServerOption <span class="cov8" title="1">{
+        return server.WithResourceCapabilities(subscribe, listChanged)
+}</span>
+
+func WithRecovery() server.ServerOption <span class="cov8" title="1">{
+        return server.WithRecovery()
+}</span>
+
+// Example server creation function
+func NewExampleServer() *Server <span class="cov8" title="1">{
+        return NewServer(
+                "Meta-MCP Server",
+                "1.0.0",
+                WithToolCapabilities(true),
+                WithResourceCapabilities(true, true),
+                WithRecovery(),
+        )
+}</span>
+
+// Utility functions for common operations
+func CreateEchoTool() mcp.Tool <span class="cov8" title="1">{
+        return NewTool("echo",
+                WithDescription("Echo back the input message"),
+                WithString("message",
+                        Required(),
+                        Description("Message to echo back"),
+                ),
+        )
+}</span>
+
+func EchoHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) <span class="cov8" title="1">{
+        message, err := request.RequireString("message")
+        if err != nil </span><span class="cov0" title="0">{
+                return NewToolResultError(fmt.Sprintf("Invalid message parameter: %v", err)), nil
+        }</span>
+
+        <span class="cov8" title="1">return NewToolResultText(fmt.Sprintf("Echo: %s", message)), nil</span>
+}
+
+// Additional utility functions can be added here as needed
+// The mcp-go library handles most of the protocol details automatically
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
