@@ -241,7 +241,7 @@ func TestHandleMessage(t *testing.T) {
 			connectionState: connection.StateNew,
 			message:         json.RawMessage(`{"method": "tools/list", "id": 3}`),
 			expectError:     true,
-			errorCode:       -32001,
+			errorCode:       ErrorCodeServerNotInitialized,
 		},
 		{
 			name:            "allow_initialize_when_not_ready",

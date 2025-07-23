@@ -4,20 +4,13 @@ import (
 	"context"
 	"errors"
 	"testing"
-	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/meta-mcp/meta-mcp-server/internal/protocol/connection"
 	"github.com/meta-mcp/meta-mcp-server/internal/protocol/jsonrpc"
+	"github.com/meta-mcp/meta-mcp-server/test/testutil"
 )
 
-// Helper function to create a test manager with a connection
-func createTestManager(connID string, state connection.ConnectionState) *connection.Manager {
-	manager := connection.NewManager(30 * time.Second)
-	conn, _ := manager.CreateConnection(connID)
-	conn.State = state
-	return manager
-}
 
 func TestCreateValidationHooks(t *testing.T) {
 	tests := []struct {
@@ -90,9 +83,9 @@ func TestCreateValidationHooks(t *testing.T) {
 			// Create connection manager
 			var manager *connection.Manager
 			if tt.hasConnectionID {
-				manager = createTestManager(tt.connectionID, tt.connectionState)
+				manager = testutil.CreateTestManagerWithConnection(tt.connectionID, tt.connectionState)
 			} else {
-				manager = connection.NewManager(30 * time.Second)
+				manager = testutil.CreateTestManager()
 			}
 
 			// Create config
@@ -154,7 +147,7 @@ func TestCreateRequestValidator(t *testing.T) {
 			hasConnectionID: true,
 			connectionID:    "test-3",
 			wantErr:         true,
-			expectedErrCode: -32002,
+			expectedErrCode: -32011,
 		},
 		{
 			name:            "allows_when_ready",
@@ -179,7 +172,7 @@ func TestCreateRequestValidator(t *testing.T) {
 			hasConnectionID: true,
 			connectionID:    "test-5",
 			wantErr:         true,
-			expectedErrCode: -32002,
+			expectedErrCode: -32011,
 		},
 		{
 			name:            "error_connection_new",
@@ -188,7 +181,7 @@ func TestCreateRequestValidator(t *testing.T) {
 			hasConnectionID: true,
 			connectionID:    "test-6",
 			wantErr:         true,
-			expectedErrCode: -32002,
+			expectedErrCode: -32011,
 		},
 	}
 
@@ -197,9 +190,9 @@ func TestCreateRequestValidator(t *testing.T) {
 			// Create connection manager
 			var manager *connection.Manager
 			if tt.hasConnectionID {
-				manager = createTestManager(tt.connectionID, tt.connectionState)
+				manager = testutil.CreateTestManagerWithConnection(tt.connectionID, tt.connectionState)
 			} else {
-				manager = connection.NewManager(30 * time.Second)
+				manager = testutil.CreateTestManager()
 			}
 
 			// Create validator
@@ -319,9 +312,9 @@ func TestCreateErrorHook(t *testing.T) {
 			// Create connection manager
 			var manager *connection.Manager
 			if tt.hasConnectionID {
-				manager = createTestManager(tt.connectionID, tt.connectionState)
+				manager = testutil.CreateTestManagerWithConnection(tt.connectionID, tt.connectionState)
 			} else {
-				manager = connection.NewManager(30 * time.Second)
+				manager = testutil.CreateTestManager()
 			}
 
 			// Create config
@@ -380,7 +373,7 @@ func TestCreateSuccessHook(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create config
 			config := ValidationHooksConfig{
-				ConnectionManager: connection.NewManager(30 * time.Second),
+				ConnectionManager: testutil.CreateTestManager(),
 			}
 
 			// Create the hook
@@ -438,7 +431,7 @@ func TestValidationHooksEdgeCases(t *testing.T) {
 
 // Test concurrent access scenarios
 func TestValidationHooksConcurrency(t *testing.T) {
-	manager := connection.NewManager(30 * time.Second)
+	manager := testutil.CreateTestManager()
 	config := ValidationHooksConfig{
 		ConnectionManager: manager,
 	}
@@ -481,7 +474,7 @@ func TestValidationHooksConcurrency(t *testing.T) {
 
 // Test error scenarios in CreateRequestValidator
 func TestCreateRequestValidatorErrorCases(t *testing.T) {
-	manager := connection.NewManager(30 * time.Second)
+	manager := testutil.CreateTestManager()
 	validator := CreateRequestValidator(manager)
 
 	t.Run("connection_not_found", func(t *testing.T) {
@@ -504,7 +497,7 @@ func TestCreateRequestValidatorErrorCases(t *testing.T) {
 
 // Benchmark tests
 func BenchmarkCreateValidationHooks(b *testing.B) {
-	manager := createTestManager("bench-conn", connection.StateReady)
+	manager := testutil.CreateTestManagerWithConnection("bench-conn", connection.StateReady)
 	
 	config := ValidationHooksConfig{
 		ConnectionManager: manager,
@@ -520,7 +513,7 @@ func BenchmarkCreateValidationHooks(b *testing.B) {
 }
 
 func BenchmarkCreateRequestValidator(b *testing.B) {
-	manager := createTestManager("bench-conn", connection.StateReady)
+	manager := testutil.CreateTestManagerWithConnection("bench-conn", connection.StateReady)
 	
 	validator := CreateRequestValidator(manager)
 	ctx := connection.WithConnectionID(context.Background(), "bench-conn")

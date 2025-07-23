@@ -3,15 +3,15 @@ package handlers
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/meta-mcp/meta-mcp-server/internal/logging"
 	"github.com/meta-mcp/meta-mcp-server/internal/protocol/connection"
+	"github.com/meta-mcp/meta-mcp-server/test/testutil"
 )
 
 func TestCreateInitializeHooks(t *testing.T) {
-	manager := connection.NewManager(10 * time.Second)
+	manager := testutil.CreateTestManager()
 	config := InitializeHooksConfig{
 		ConnectionManager: manager,
 		SupportedVersions: []string{"1.0", "0.1.0"},
@@ -33,7 +33,7 @@ func TestCreateInitializeHooks(t *testing.T) {
 }
 
 func TestBeforeInitializeHook(t *testing.T) {
-	manager := connection.NewManager(10 * time.Second)
+	manager := testutil.CreateTestManager()
 	conn, _ := manager.CreateConnection("test-init-1")
 
 	config := InitializeHooksConfig{
@@ -67,7 +67,7 @@ func TestBeforeInitializeHook(t *testing.T) {
 }
 
 func TestAfterInitializeHook(t *testing.T) {
-	manager := connection.NewManager(10 * time.Second)
+	manager := testutil.CreateTestManager()
 	conn, _ := manager.CreateConnection("test-init-2")
 
 	// Start handshake first
@@ -305,7 +305,7 @@ func TestLogServerCapabilities(t *testing.T) {
 // Test error cases and edge scenarios for CreateInitializeHooks
 func TestCreateInitializeHooksEdgeCases(t *testing.T) {
 	t.Run("no_connection_in_context", func(t *testing.T) {
-		manager := connection.NewManager(10 * time.Second)
+		manager := testutil.CreateTestManager()
 		config := InitializeHooksConfig{
 			ConnectionManager: manager,
 			SupportedVersions: []string{"1.0"},
@@ -326,7 +326,7 @@ func TestCreateInitializeHooksEdgeCases(t *testing.T) {
 	})
 
 	t.Run("unsupported_version", func(t *testing.T) {
-		manager := connection.NewManager(10 * time.Second)
+		manager := testutil.CreateTestManager()
 		conn, _ := manager.CreateConnection("test-unsupported")
 		
 		config := InitializeHooksConfig{
@@ -353,7 +353,7 @@ func TestCreateInitializeHooksEdgeCases(t *testing.T) {
 	})
 
 	t.Run("connection_not_found", func(t *testing.T) {
-		manager := connection.NewManager(10 * time.Second)
+		manager := testutil.CreateTestManager()
 		config := InitializeHooksConfig{
 			ConnectionManager: manager,
 			SupportedVersions: []string{"1.0"},
@@ -377,7 +377,7 @@ func TestCreateInitializeHooksEdgeCases(t *testing.T) {
 	})
 
 	t.Run("with_client_capabilities", func(t *testing.T) {
-		manager := connection.NewManager(10 * time.Second)
+		manager := testutil.CreateTestManager()
 		conn, _ := manager.CreateConnection("test-caps")
 		
 		config := InitializeHooksConfig{
@@ -411,7 +411,7 @@ func TestCreateInitializeHooksEdgeCases(t *testing.T) {
 	})
 
 	t.Run("with_server_capabilities", func(t *testing.T) {
-		manager := connection.NewManager(10 * time.Second)
+		manager := testutil.CreateTestManager()
 		conn, _ := manager.CreateConnection("test-server-caps")
 		conn.StartHandshake(nil)
 		
@@ -464,7 +464,7 @@ func TestCreateInitializeHooksEdgeCases(t *testing.T) {
 
 // Test concurrent access
 func TestCreateInitializeHooksConcurrency(t *testing.T) {
-	manager := connection.NewManager(10 * time.Second)
+	manager := testutil.CreateTestManager()
 	config := InitializeHooksConfig{
 		ConnectionManager: manager,
 		SupportedVersions: []string{"1.0"},

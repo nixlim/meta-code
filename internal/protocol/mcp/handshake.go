@@ -211,7 +211,7 @@ func (hs *HandshakeServer) HandleMessage(ctx context.Context, message json.RawMe
 			logging.FieldConnectionState: "not_initialized",
 		}).Warn(ctx, "Rejecting request - connection not initialized")
 		// Return not initialized error with custom code
-		return mcp.NewJSONRPCError(req.ID, -32001, "Not initialized",
+		return mcp.NewJSONRPCError(req.ID, ErrorCodeServerNotInitialized, "Not initialized",
 			"Initialize handshake must be completed before other requests")
 	}
 

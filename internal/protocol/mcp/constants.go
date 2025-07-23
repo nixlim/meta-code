@@ -65,6 +65,7 @@ const (
 	ErrorCodeUnauthorized        = -32008
 	ErrorCodeRateLimited         = -32009
 	ErrorCodeTimeout             = -32010
+	ErrorCodeServerNotInitialized = -32011
 )
 
 // Error messages for MCP-specific error codes
@@ -79,6 +80,7 @@ var MCPErrorMessages = map[int]string{
 	ErrorCodeUnauthorized:        "Unauthorized access",
 	ErrorCodeRateLimited:         "Rate limit exceeded",
 	ErrorCodeTimeout:             "Request timeout",
+	ErrorCodeServerNotInitialized: "Server not initialized",
 }
 
 // Capability constants

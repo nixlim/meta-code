@@ -93,7 +93,7 @@ func CreateRequestValidator(manager *connection.Manager) func(ctx context.Contex
 		// Check if handshake is complete
 		if !conn.IsReady() {
 			return &jsonrpc.Error{
-				Code:    -32002, // Custom error code for "not initialized"
+				Code:    -32011, // ErrorCodeServerNotInitialized
 				Message: "Connection not initialized",
 				Data: map[string]interface{}{
 					"state":  conn.GetState().String(),

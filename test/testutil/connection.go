@@ -28,6 +28,15 @@ func CreateTestContext(connID string) context.Context {
 	return connection.WithConnectionID(context.Background(), connID)
 }
 
+// CreateTestManagerWithConnection creates a connection manager with a pre-configured connection.
+// This is useful for tests that need a connection in a specific state.
+func CreateTestManagerWithConnection(connID string, state connection.ConnectionState) *connection.Manager {
+	manager := CreateTestManager()
+	conn, _ := manager.CreateConnection(connID)
+	conn.State = state
+	return manager
+}
+
 // SetupTestConnection creates a manager and connection for testing.
 func SetupTestConnection(t *testing.T, connID string) (*connection.Manager, *connection.Connection, context.Context) {
 	manager := CreateTestManager()
