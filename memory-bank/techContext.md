@@ -40,6 +40,12 @@
 - **State Persistence:** BoltDB (planned) for embedded storage
 - **Caching:** In-memory maps with sync primitives
 
+### Development Tools Integration
+- **Zen MCP:** Debug, analysis, and code review automation
+- **Serena MCP:** Code navigation and memory management
+- **Claude Flow:** Swarm orchestration and workflow automation
+- **Browser Tools MCP:** UI testing and debugging support
+
 ## Development Setup
 
 ### Project Structure
