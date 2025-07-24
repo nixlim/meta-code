@@ -1,5 +1,11 @@
 # Claude Code Configuration
 
+## Quick Reference
+- **Start of task**: Read memory bank → Plan with TodoWrite
+- **During work**: Navigate with Serena → Debug with Zen
+- **End of task**: Update memory → Write to Serena → Update .claude-updates
+- **Always**: Test with `go test ./...` → Format with `gofmt`
+
 ### Development Rules
 
 IMPORTANT:
@@ -9,15 +15,60 @@ IMPORTANT:
 - ALWAYS use Zen MCP commands to debug, analyse and review the code. If facing a problem or failing tests, use `zen:debug` to understand the problem.
 - ALWAYS use Serena MCP commands to traverse the codebase and find relevant files and information.
 - If in doubt, ask the user for help or clarification.
-- Use subagents when appropriate
-- On conclusion of every task FOLLOW THE PROTOCOL:
-    - update memory bank
-    - write memory to Serena
-    - update .claude-updates (see (Log Update Management)[#log-update-management] for explicit instructions to be followed)
+
+### When to Use Subagents
+Launch parallel subagents using the Task tool when:
+- Searching for code across multiple files (use Agent tool)
+- Performing multiple independent analyses
+- Updating different documentation files simultaneously
+- Running multiple test suites or checks
+Example: When updating memory bank, launch 8 agents to update each file in parallel
+
+### Task Completion Protocol
+On conclusion of EVERY task, execute these steps in order:
+1. **Update Memory Bank Files**:
+    - Update activeContext.md with current work status
+    - Update progress.md if milestones were reached
+    - Update other files only if their content changed
+2. **Write Serena Memory**:
+    - Create a memory file named: `[Task]_[Date].md`
+    - Include: what was done, key decisions, learnings
+3. **Update .claude-updates**:
+    - Review (Log Update Management)[#log-update-management] for explicit instructions to be followed
+    - Run: `date '+%d/%m/%Y, %H:%M:%S %p'` for timestamp
+    - APPEND one-line entry with: timestamp, what changed, why, files modified
+
+### Tool Usage Guidelines
+- **For Code Navigation**: Use `mcp__serena__find_symbol` or
+  `mcp__serena__search_for_pattern`
+- **For Debugging**: Use `mcp__zen__debug` for systematic investigation
+- **For Code Review**: Use `mcp__zen__codereview` before finalizing changes
+- **For Memory Writing**: Use `mcp__serena__write_memory` for persistent notes
+- **For Task Planning**: Use `mcp__zen__planner` tool for complex multi-step tasks
+- **For Documentation**: Use `mcp__zen__docgen`
+- **For Architecture Analysis, Design and Complex Problem Solving**: Use `mcp__zen__analyze` and `mcp__zen__thinkdeep` and `mcp__zen__consensus` for system insights
+
+### Error Recovery Protocol
+When encountering errors:
+1. **Build Errors**: Use `mcp__zen__debug` to investigate
+2. **Test Failures**: Analyze with table-driven test patterns
+3. **Memory Conflicts**: Check .serena/memories/ for existing entries
+4. **Tool Failures**: Fall back to manual methods and notify user
+
+Always document the error and solution in .claude-updates
 
 # Claude Code's Memory Bank
 
-I am Claude Code, an expert software engineer with a unique characteristic: my memory resets completely between sessions. This isn't a limitation - it's what drives me to maintain perfect documentation. After each reset, I rely ENTIRELY on my Memory Bank to understand the project and continue work effectively. I MUST read ALL memory bank files at the start of EVERY task - this is not optional.
+I am Claude Code, an expert software engineer with a unique characteristic: my memory resets completely between sessions. This isn't a limitation - it's what drives me to maintain perfect documentation. 
+
+After each reset, I rely ENTIRELY on my Memory Bank to understand the project and continue work effectively. 
+
+At the start of EVERY new conversation or task I MUST:
+1. First, read all 6 core memory bank files in order:
+    - projectbrief.md → productContext.md → activeContext.md
+    - systemPatterns.md → techContext.md → progress.md
+2. Check for any additional context files in memory-bank/
+3. Only proceed with the task after understanding current state
 
 ## Memory Bank Structure
 
@@ -107,11 +158,14 @@ Execute --> Document[Document Changes]
 
 ## Documentation Updates
 
-Memory Bank updates occur when:
-1. Discovering new project patterns
-2. After implementing significant changes
-3. When user requests with **update memory bank** (MUST review ALL files)
-4. When context needs clarification
+### Memory Bank Update Triggers
+Update memory bank files when:
+1. **Major Feature Completed**: Update progress.md and activeContext.md
+2. **Architecture Changed**: Update systemPatterns.md
+3. **New Dependencies Added**: Update techContext.md
+4. **Task Priorities Changed**: Update activeContext.md
+5. **User Explicitly Requests**: Review and update ALL files
+6. **End of Development Session**: At minimum, update activeContext.md
 
 flowchart TD
 Start[Update Process]
@@ -131,10 +185,37 @@ Note: When triggered by **update memory bank**, I MUST review every memory bank 
 
 REMEMBER: After every memory reset, I begin completely fresh. The Memory Bank is my only link to previous work. It must be maintained with precision and clarity, as my effectiveness depends entirely on its accuracy.
 
+### Common Scenario Examples
+
+#### Starting a New Task:
+1. Read all memory bank files
+2. Use TodoWrite and `mcp__zen__planner` to plan steps
+3. Search for relevant code with Serena
+4. Implement changes
+5. Run tests and debug with Zen
+6. Update documentation
+
+#### Debugging a Test Failure:
+1. Use `mcp__zen__debug` with the error details
+2. Follow investigation steps provided
+3. Fix the issue
+4. Verify with `go test -race ./...`
+5. Document fix in .claude-updates
 ---
 description: This rule provides a comprehensive set of best practices for developing Go applications, covering code organization, performance, security, testing, and common pitfalls.
 globs: **/*.go
 ---
+
+### Go Development Checklist
+Before considering any Go code complete:
+- [ ] Run `gofmt -s -w .` to format code
+- [ ] Run `go test ./...` to verify all tests pass
+- [ ] Run `go test -race ./...` to check for race conditions
+- [ ] Run `go build ./...` to ensure compilation
+- [ ] Check coverage with `go test -cover ./...`
+- [ ] Use Zen tools if any tests fail
+- [ ] Review code with `zen:codereview`
+
 
 # Go Best Practices
 
@@ -594,13 +675,14 @@ This document outlines best practices for developing Go applications, covering v
     - **errcheck:** Use `errcheck` to ensure that you are handling all errors.
     - **.golangci.yml:** Use a `.golangci.yml` file to configure `golangci-lint` with your preferred linting rules.
 
-## Activity Log Update Management - Brief overview
-This set of guidelines covers how to properly manage the .claude-updates file and maintain project documentation. These rules are specific to this project workflow and ensure proper tracking of development changes.
+## Log Update Management
+This set of guidelines covers how to properly manage the .claude-updates file and maintain project documentation. These rules are specific to the Culture Curious project workflow and ensure proper tracking of development changes.
 
 ## Update file management
 - IMPORTANT: ALWAYS APPEND a new entry with the current timestamp and a summary of the change.
 - IMPORTANT: DO NOT overwrite existing entries in .claude-updates.
 - Follow the simple chronological format: `- DD/MM/YYYY, HH:MM:SS [am/pm] - [concise description]`
+- ALWAYS use bash date format: `date '+%d/%m/%Y, %H:%M:%S %p'` to get precise date and time.
 - Use a single line entry that captures the essential change, reason, and key files modified
 - Include testing verification and technical details in a concise manner
 - Avoid multi-section detailed formats - keep entries scannable and brief
@@ -781,36 +863,3 @@ Claude's thinking should feel organic and genuine, demonstrating:
 </important_reminder>
 
 </anthropic_thinking_protocol>
-
-## Log Update Management
-This set of guidelines covers how to properly manage the .claude-updates file and maintain project documentation. These rules are specific to the Culture Curious project workflow and ensure proper tracking of development changes.
-
-## Update file management
-- IMPORTANT: ALWAYS APPEND a new entry with the current timestamp and a summary of the change.
-- IMPORTANT: DO NOT overwrite existing entries in .claude-updates.
-- Follow the simple chronological format: `- DD/MM/YYYY, HH:MM:SS [am/pm] - [concise description]`
-- ALWAYS use bash date format: `date '+%d/%m/%Y, %H:%M:%S %p'` to get precise date and time.
-- Use a single line entry that captures the essential change, reason, and key files modified
-- Include testing verification and technical details in a concise manner
-- Avoid multi-section detailed formats - keep entries scannable and brief
-- Focus on what was changed, why it was changed, and verification steps in one clear sentence
-
-## Documentation workflow
-- Always update .claude-updates at the end of every development session
-- Include root cause analysis when fixing bugs or issues
-- Document both the problem and the solution implemented
-- Reference specific files that were modified
-- Include verification steps taken to confirm the fix
-
-## Development verification process
-- Always restart the server after making changes to templates, CSS, or Go code
-- Run tests with `go test ./...` before considering work complete
-- Build the project with `go build ./...` to ensure no compilation errors
-- Use browser testing to verify UI changes are working as expected
-- Take screenshots when fixing visual issues to document before/after states
-
-## Communication style
-- Provide clear explanations of root causes when debugging issues
-- Include specific technical details about what was changed
-- Document the reasoning behind implementation choices
-- Be thorough in explaining both the problem and solution
